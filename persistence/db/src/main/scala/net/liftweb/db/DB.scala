@@ -1179,8 +1179,11 @@ trait ProtoDBVendor extends ConnectionManager {
           if (pool.isEmpty && poolSize == curSize && canExpand_?) {
             tempMaxSize += 1
             logger.debug("Temporarily expanding pool. name=%s, tempMaxSize=%d".format(name, tempMaxSize))
+            newConnection(name)
+          }else{
+            Failure("Database connection is too busy, please try it later!")
           }
-          newConnection(name)
+          
 
         case x :: xs =>
           logger.trace("Found connection in pool, name=%s".format(name))
