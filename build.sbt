@@ -220,6 +220,7 @@ lazy val persistence: Seq[ProjectReference] =
 lazy val db =
   persistenceProject("db")
     .dependsOn(util, webkit)
+    .settings(libraryDependencies += hikariCP)
     .settings(libraryDependencies += mockito_scalatest)
     .settings(crossScalaVersions := crossUpTo213)
 
