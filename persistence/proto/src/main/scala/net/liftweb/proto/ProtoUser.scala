@@ -570,6 +570,13 @@ trait ProtoUser {
   protected def capturePreLoginState(): () => Unit = () => {}
 
   /**
+   * OBP fork: webkit-free stub. OBP's `AuthUser` overrides this (returns Nil). The original
+   * returned `List[Loc.LocParam[Unit]]` (sitemap login-menu params, lift-webkit); the menu
+   * machinery is gone and OBP never consumes the result, so a neutral `List[Any]` suffices.
+   */
+  protected def loginMenuLocParams: List[Any] = Nil
+
+  /**
    * OBP fork: webkit-free stub. OBP's `AuthUser` overrides this; the original processed the
    * posted login form (S.post_?/S.param) and logged the user in.
    */
