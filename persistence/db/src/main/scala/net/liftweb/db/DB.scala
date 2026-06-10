@@ -21,7 +21,7 @@ import common._
 import util._
 import Helpers._
 
-import net.liftweb.http.S
+// OBP fork: lift-webkit dependency removed (was: import net.liftweb.http.S)
 
 import javax.sql.{DataSource}
 import java.sql.{ResultSetMetaData, SQLException}
@@ -41,6 +41,17 @@ object DB extends DB1 {
 }
 
 trait DB extends Loggable {
+
+  /**
+   * OBP fork: replaces Lift webkit's request-scope flag `S.exceptionThrown_?`.
+   * Lift rolled back a transaction when the HTTP request flagged an error. OBP runs on
+   * http4s (no Lift request scope), so this defaults to false: normal completion commits,
+   * while a real (non-LiftFlowOfControl) exception still rolls back via the surrounding
+   * `rollback=true`/`success=false` default before this is read. Injectable so a Lift-style
+   * host could restore the old behavior.
+   */
+  @volatile var requestExceptionThrown: () => Boolean = () => false
+
   private val threadStore = new ThreadLocal[HashMap[ConnectionIdentifier, ConnectionHolder]]
   private val _postCommitFuncs = new ThreadLocal[List[() => Unit]]
 
@@ -233,13 +244,13 @@ trait DB extends Loggable {
               try {
                 try {
                   val ret = f
-                  success = !S.exceptionThrown_?
+                  success = !requestExceptionThrown()
                   ret
                 } catch {
                   // this is the case when we want to commit the transaction
                   // but continue to throw the exception
                   case e: LiftFlowOfControlException => {
-                    success = !S.exceptionThrown_?
+                    success = !requestExceptionThrown()
                     throw e
                   }
                 }
@@ -256,13 +267,13 @@ trait DB extends Loggable {
             try {
               try {
                 val ret = f
-                success = !S.exceptionThrown_?
+                success = !requestExceptionThrown()
                 ret
               } catch {
                 // this is the case when we want to commit the transaction
                 // but continue to throw the exception
                 case e: LiftFlowOfControlException => {
-                  success = !S.exceptionThrown_?
+                  success = !requestExceptionThrown()
                   throw e
                 }
               }
@@ -682,13 +693,13 @@ trait DB extends Loggable {
       var rollback = true
       try {
         val ret = f(conn)
-        rollback = S.exceptionThrown_?
+        rollback = requestExceptionThrown()
         ret
       } catch {
         // this is the case when we want to commit the transaction
         // but continue to throw the exception
         case e: LiftFlowOfControlException => {
-          rollback = S.exceptionThrown_?
+          rollback = requestExceptionThrown()
           throw e
         }
       } finally {

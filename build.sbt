@@ -2,7 +2,7 @@ import Dependencies._
 import LiftSbtHelpers._
 
 organization in ThisBuild          := "net.liftweb"
-version in ThisBuild               := "3.5.0"
+version in ThisBuild               := "3.5.0-obp-nowebkit"
 homepage in ThisBuild              := Some(url("http://www.liftweb.net"))
 licenses in ThisBuild              += ("Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 startYear in ThisBuild             := Some(2006)
@@ -45,7 +45,8 @@ resolvers  in ThisBuild  ++= Seq(
   "releases"      at "https://oss.sonatype.org/content/repositories/releases"
 )
 
-lazy val liftProjects = core ++ web ++ persistence
+// OBP fork: drop `web` (webkit/testkit) from the aggregate — webkit is the dependency we are removing.
+lazy val liftProjects = core ++ persistence
 
 lazy val framework =
   liftProject("lift-framework", file("."))
@@ -215,18 +216,19 @@ lazy val webkit =
 // Persistence Projects
 // --------------------
 lazy val persistence: Seq[ProjectReference] =
-  Seq(db, proto, mapper, record, squeryl_record, mongodb, mongodb_record)
+  // OBP fork: build only the ORM trio OBP needs; record/squeryl/mongodb dropped.
+  Seq(db, proto, mapper)
 
 lazy val db =
   persistenceProject("db")
-    .dependsOn(util, webkit)
+    .dependsOn(util) // OBP fork: webkit removed (was: util, webkit)
     .settings(libraryDependencies += hikariCP)
     .settings(libraryDependencies += mockito_scalatest)
     .settings(crossScalaVersions := crossUpTo213)
 
 lazy val proto =
   persistenceProject("proto")
-    .dependsOn(webkit)
+    .dependsOn(util) // OBP fork: webkit removed (was: webkit)
     .settings(crossScalaVersions := crossUpTo213)
 
 lazy val mapper =
