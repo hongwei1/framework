@@ -26,8 +26,7 @@ import common._
 import json._
 import util._
 import Helpers._
-import http.LiftRules
-import http.provider.HTTPRequest
+// OBP fork: lift-webkit removed (was: import http.LiftRules / import http.provider.HTTPRequest)
 
 
 /**
@@ -94,17 +93,8 @@ class MapperSpec extends Specification with BeforeEach {
         SampleModel.dbTableName must_== "samplemodel"
       }
 
-      "should use displayNameCalculator for displayName" in {
-        val localeCalculator = LiftRules.localeCalculator
-        SampleModel.firstName.displayName must_== "DEFAULT:SampleModel.firstName"
-
-        LiftRules.localeCalculator = (request: Box[HTTPRequest]) => request.flatMap(_.locale)
-          .openOr(new Locale("xx", "YY"))
-        SampleModel.firstName.displayName must_== "xx_YY:SampleModel.firstName"
-
-        LiftRules.localeCalculator = localeCalculator
-        success
-      }
+      // OBP fork: removed the LiftRules.localeCalculator displayName test - displayName's locale
+      // now comes from java.util.Locale.getDefault (webkit-free), making this web-locale test obsolete.
 
       "snake connection should snakify default table & column names" in {
         SampleModelSnake.firstName.name must_== "firstName"
