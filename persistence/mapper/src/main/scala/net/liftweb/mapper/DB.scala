@@ -17,11 +17,11 @@
 package net.liftweb 
 package mapper 
 
-import http.S
-
-object DB extends db.DB1 {
-  db.DB.queryCollector = {
-    case (query, time) => 
-      query.statementEntries.foreach{ case db.DBLogEntry(stmt, duration) => S.logQuery(stmt, duration) }
-  }
-}
+/**
+ * OBP fork: webkit removed. This object previously wired `db.DB.queryCollector`
+ * to `net.liftweb.http.S.logQuery`, routing per-statement timings into Lift's
+ * per-request query log. That hook is gone; `db.DB.queryCollector` keeps its
+ * no-op default, so `net.liftweb.mapper.DB` is now just the mapper-side alias of
+ * `db.DB1`.
+ */
+object DB extends db.DB1

@@ -23,11 +23,10 @@ import net.liftweb.common._
 import net.liftweb.util._
 import Helpers._
 import java.util.Date
-import net.liftweb.http._
+// OBP fork: webkit removed — SHtml.selectObj _toForm and asJsExp had no OBP call-sites.
 import reflect.runtime.universe._
 import net.liftweb.json._
 import scala.xml.{Text, NodeSeq}
-import js._
 
 
 /**
@@ -115,8 +114,6 @@ abstract class MappedEnum[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner: T, 
   def jdbcFriendly(field: String) = new java.lang.Integer(toInt)
   override def jdbcFriendly = new java.lang.Integer(toInt)
 
-  def asJsExp: JsExp = JE.Num(get.id)
-
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get.id))
 
 
@@ -180,19 +177,6 @@ abstract class MappedEnum[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner: T, 
     * is the id.string of the Value and the second string is the Text name of the Value.
     */
   def buildDisplayList: List[(Int, String)] = enum.values.toList.map(a => (a.id, a.toString))
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] =
-  /*
-    if (autocomplete_?)
-      Full(AutoComplete.autocompleteObj[Int](buildDisplayList, Full(toInt),
-                                      v => this.set(fromInt(v))))
-    else
-    */
-      Full(SHtml.selectObj[Int](buildDisplayList, Full(toInt),
-                                v => this.set(fromInt(v))))
 }
 
 abstract class MappedIntIndex[T<:Mapper[T]](owner : T) extends MappedInt[T](owner) with IndexedField[Int] {
@@ -309,8 +293,6 @@ abstract class MappedInt[T<:Mapper[T]](val fieldOwner: T) extends MappedField[In
   override protected[mapper] def doneWithSave(): Unit = {
     orgData = data
   }
-
-  def asJsExp: JsExp = JE.Num(get)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get))
 

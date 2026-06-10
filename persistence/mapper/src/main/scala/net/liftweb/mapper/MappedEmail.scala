@@ -17,7 +17,7 @@
 package net.liftweb
 package mapper
 
-import http.S
+// OBP fork: webkit removed — S.? validation message inlined as a literal.
 import util.FieldError
 import proto._
 
@@ -34,7 +34,7 @@ abstract class MappedEmail[T<:Mapper[T]](owner: T, maxLen: Int) extends MappedSt
   override def setFilter = notNull _ :: toLower _ :: trim _ :: super.setFilter
 
   override def validate =
-    (if (MappedEmail.emailPattern.matcher(i_is_!).matches) Nil else List(FieldError(this, Text(S.?("invalid.email.address"))))) :::
+    (if (MappedEmail.emailPattern.matcher(i_is_!).matches) Nil else List(FieldError(this, Text("invalid.email.address")))) :::
     super.validate
 
 }

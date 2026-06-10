@@ -23,7 +23,7 @@ import java.util.Date
 import net.liftweb.util._
 import Helpers._
 import net.liftweb.common._
-import net.liftweb.http.js._
+// OBP fork: webkit removed — asJsExp (net.liftweb.http.js.JsExp) had no OBP call-sites.
 import net.liftweb.json._
 import scala.reflect.runtime.universe._
 import scala.xml.{Text, NodeSeq}
@@ -106,8 +106,6 @@ abstract class MappedBinary[T<:Mapper[T]](val fieldOwner: T) extends MappedField
   }
 
   override def renderJs_? = false
-
-  def asJsExp: JsExp = throw new NullPointerException("No way")
 
   def asJsonValue: Box[JsonAST.JValue] = Full(get match {
     case null => JsonAST.JNull
@@ -218,8 +216,6 @@ abstract class MappedText[T<:Mapper[T]](val fieldOwner: T) extends MappedField[S
   protected def i_was_! : String = orgData.get
 
   protected[mapper] def doneWithSave(): Unit = {orgData.setFrom(data)}
-
-  def asJsExp: JsExp = JE.Str(get)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(get match {
     case null => JsonAST.JNull
@@ -352,8 +348,6 @@ abstract class MappedFakeClob[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
   protected[mapper] def doneWithSave(): Unit = {orgData.setFrom(data)}
 
   protected def i_obscure_!(in: String): String = ""
-
-  def asJsExp: JsExp = JE.Str(get)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(get match {
     case null => JsonAST.JNull

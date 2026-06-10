@@ -21,12 +21,11 @@ import java.math.{MathContext,RoundingMode}
 import java.sql.{ResultSet, Types}
 import java.lang.reflect.Method
 import net.liftweb.util.Helpers._
-import net.liftweb.http.{S, SHtml}
 import java.util.Date
 import net.liftweb.util._
 import net.liftweb.common._
 import net.liftweb.json._
-import net.liftweb.http.js._
+// OBP fork: webkit removed — S/SHtml/asJsExp form+JS members had no OBP call-sites.
 import scala.xml.{Text, NodeSeq}
 
 /**
@@ -155,7 +154,6 @@ abstract class MappedDecimal[T <: Mapper[T]] (val fieldOwner : T, val context : 
     data
   }
 
-  def asJsExp: JsExp = JE.Num(get)
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JDouble(get.doubleValue))
 
   def setFromAny (in : Any) : BigDecimal =

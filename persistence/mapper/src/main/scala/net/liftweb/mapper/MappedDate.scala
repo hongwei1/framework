@@ -25,9 +25,8 @@ import net.liftweb._
 import util._
 import common._
 import Helpers._
-import http._
-import S._
-import js._
+// OBP fork: webkit removed — date parse/format now go through MapperDateConverter
+// (was LiftRules.dateTimeConverter()); S/js form+JS members had no OBP call-sites.
 import json._
 import scala.xml.{Text, NodeSeq}
 import scala.reflect.runtime.universe._
@@ -90,14 +89,14 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
 
   /**
    * This defines the string parsing semantics of this field. Used in setFromAny.
-   * By default uses LiftRules.dateTimeConverter's parseDate; override for field-specific behavior
+   * By default uses MapperDateConverter.parseDate; override for field-specific behavior
    */
-  def parse(s: String): Box[Date] = LiftRules.dateTimeConverter().parseDate(s)
+  def parse(s: String): Box[Date] = MapperDateConverter.parseDate(s)
   /**
-   * This method defines the string parsing semantics of this field. Used in toString, _toForm.
-   * By default uses LiftRules.dateTimeConverter's formatDate; override for field-specific behavior
+   * This method defines the string parsing semantics of this field. Used in toString.
+   * By default uses MapperDateConverter's formatDate; override for field-specific behavior
    */
-  def format(d: Date): String = LiftRules.dateTimeConverter().formatDate(d)
+  def format(d: Date): String = MapperDateConverter.formatDate(d)
 
   protected def real_i_set_!(value: Date): Date = {
     if (value != data.get) {
@@ -114,8 +113,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
     case null => 0L
     case d: Date => d.getTime / 1000L
   }
-
-  def asJsExp: JsExp = JE.Num(toLong)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(get match {
     case null => JsonAST.JNull
@@ -139,16 +136,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
 
   protected def i_obscure_!(in : Date) : Date = {
     new Date(0L)
-  }
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] =
-  S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-  Full(appendFieldId(<input type={formInputType}
-                     name={funcName}
-                     value={get match {case null => "" case s => format(s)}}/>))
   }
 
   override def setFromAny(f : Any): Date = f match {

@@ -21,9 +21,8 @@ import common._
 
 
 import scala.xml.{NodeSeq, Text, Elem}
-import http.{js, S, SHtml}
-import js._
-import S.?
+// OBP fork: webkit removed — SHtml.selectObj _toForm, asSafeJs/asJsExp JS members
+// and the S.?-localised immutable message had no OBP call-sites.
 import json._
 import util.FieldError
 
@@ -103,16 +102,6 @@ with LifecycleCallbacks {
   def dbKeyToTable: KeyedMetaMapper[KeyType, Other]
 
   def validSelectValues: Box[List[(KeyType, String)]] = Empty
-
-
-  def immutableMsg: NodeSeq = Text(?("Can't change"))
-
-  override def _toForm: Box[Elem] = Full(validSelectValues.flatMap{
-      case Nil => Empty
-
-      case xs =>
-        Full(SHtml.selectObj(xs, Full(this.get), this.set))
-    }.openOr(<span>{immutableMsg}</span>))
 
   /**
    * Is the key defined
@@ -234,11 +223,6 @@ extends MappedLong[T](theOwner) with MappedForeignKey[Long,T,O] with BaseForeign
   override def dbForeignKey_? = true
 
 
-  def asSafeJs(obs: Box[KeyObfuscator]): JsExp =
-  obs.map(o => JE.Str(o.obscure(dbKeyToTable, get))).openOr(JE.Num(get))
-
-  override def asJsExp: JsExp = if (defined_?) super.asJsExp else JE.JsNull
-
   override def asJsonValue: Box[JsonAST.JValue] =
     if (defined_?) super.asJsonValue else Full(JsonAST.JNull)
 
@@ -287,9 +271,6 @@ extends MappedString[T](fieldOwner, maxLen) with MappedForeignKey[String,T,O] wi
   override def dbIndexed_? = true
 
   override def dbForeignKey_? = true
-
-  def asSafeJs(obs: Box[KeyObfuscator]): JsExp =
-    obs.map(o => JE.Str(o.obscure(dbKeyToTable, get))).openOr(JE.Str(get))
 
   /**
    * Called when Schemifier adds a foreign key.  Return a function that will be called when Schemifier

@@ -20,12 +20,11 @@ package mapper
 import java.sql.Types
 import java.lang.reflect.Method
 import net.liftweb.util.Helpers._
-import net.liftweb.http.{S, SHtml}
 import java.util.Date
 import net.liftweb.util._
 import net.liftweb.common._
 import net.liftweb.json._
-import net.liftweb.http.js._
+// OBP fork: webkit removed — SHtml.checkbox _toForm and asJsExp had no OBP call-sites.
 import scala.xml._
 import scala.reflect.runtime.universe._
 import json.JsonAST.JValue
@@ -109,8 +108,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
 
   def jdbcFriendly(field : String) = data.map(v => new java.lang.Integer(if(v) 1 else 0)) openOr null
 
-  def asJsExp: JsExp = if (get) JE.JsTrue else JE.JsFalse
-
   override def setFromAny(in: Any): Boolean = {
     in match {
       case b: Boolean => this.set(b)
@@ -158,11 +155,5 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
    * Given the driver type, return the string required to create the column in the database
    */
   def fieldCreatorString(dbType: DriverType, colName: String): String = colName + " " + dbType.booleanColumnType + notNullAppender()
-
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] = Full(SHtml.checkbox(get,this.apply _))
 }
 

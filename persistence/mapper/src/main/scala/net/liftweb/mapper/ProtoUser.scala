@@ -17,12 +17,25 @@
 package net.liftweb
 package mapper
 
-import http._
+// OBP fork: webkit removed — the web UI (login/signup/lostPassword menus, Loc/Menu/
+// sitemap, SHtml form builders) lives in proto.ProtoUser (GenProtoUser), which is
+// already decoupled. Here only the S.?-localised display-name strings remained;
+// they are inlined as literal keys.
 import util._
 import common._
 import proto.{ProtoUser => GenProtoUser}
 
 import scala.xml.{NodeSeq, Text}
+
+/**
+ * OBP fork: webkit-free replacement for the marker trait that used to live in
+ * `net.liftweb.http` (it only declared `def userIdAsString: String`). Kept so the
+ * `ProtoUser` type hierarchy and the `userIdAsString` contract (called by OBP's
+ * AuthUser) are preserved without pulling in lift-webkit.
+ */
+trait UserIdAsString {
+  def userIdAsString: String
+}
 
 /**
  * ProtoUser is a base class that gives you a "User" that has a first name,
@@ -71,7 +84,7 @@ trait ProtoUser[T <: ProtoUser[T]] extends KeyedMapper[Long, T] with UserIdAsStr
   /**
    * The string name for the first name field
    */
-  def firstNameDisplayName = S.?("first.name")
+  def firstNameDisplayName = "first.name"
 
   /**
    * The last field for the User.  You can override the behavior
@@ -92,7 +105,7 @@ trait ProtoUser[T <: ProtoUser[T]] extends KeyedMapper[Long, T] with UserIdAsStr
   /**
    * The last name string
    */
-  def lastNameDisplayName = S.?("last.name")
+  def lastNameDisplayName = "last.name"
 
   /**
    * The email field for the User.  You can override the behavior
@@ -107,7 +120,7 @@ trait ProtoUser[T <: ProtoUser[T]] extends KeyedMapper[Long, T] with UserIdAsStr
 
   protected class MyEmail(obj: T, size: Int) extends MappedEmail(obj, size) {
     override def dbIndexed_? = true
-    override def validations = valUnique(S.?("unique.email.address")) _ :: super.validations
+    override def validations = valUnique("unique.email.address") _ :: super.validations
     override def displayName = fieldOwner.emailDisplayName
     override val fieldId = Some(Text("txtEmail"))
   }
@@ -115,7 +128,7 @@ trait ProtoUser[T <: ProtoUser[T]] extends KeyedMapper[Long, T] with UserIdAsStr
   /**
    * The email first name
    */
-  def emailDisplayName = S.?("email.address")
+  def emailDisplayName = "email.address"
 
   /**
    * The password field for the User.  You can override the behavior
@@ -135,7 +148,7 @@ trait ProtoUser[T <: ProtoUser[T]] extends KeyedMapper[Long, T] with UserIdAsStr
   /**
    * The display name for the password field
    */
-  def passwordDisplayName = S.?("password")
+  def passwordDisplayName = "password"
 
   /**
    * The superuser field for the User.  You can override the behavior
@@ -415,12 +428,12 @@ trait MegaProtoUser[T <: MegaProtoUser[T]] extends ProtoUser[T] {
   /**
    * The string for the timezone field
    */
-  def timezoneDisplayName = S.?("time.zone")
+  def timezoneDisplayName = "time.zone"
 
   /**
    * The string for the locale field
    */
-  def localeDisplayName = S.?("locale")
+  def localeDisplayName = "locale"
 
 }
 

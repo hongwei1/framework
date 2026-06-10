@@ -22,9 +22,8 @@ import java.lang.reflect.Method
 import net.liftweb.common._
 import net.liftweb.util._
 import java.util.Date
-import net.liftweb.http._
+// OBP fork: webkit removed — asJsExp (net.liftweb.http.js.JsExp) had no OBP call-sites.
 import scala.xml.{Text, NodeSeq}
-import js._
 import net.liftweb.json._
 
 abstract class MappedDouble[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Double, T] {
@@ -119,8 +118,6 @@ abstract class MappedDouble[T<:Mapper[T]](val fieldOwner: T) extends MappedField
 		}
 		data
 	}
-
-	def asJsExp: JsExp = JE.Num(get)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JDouble(get))
 

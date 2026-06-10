@@ -23,8 +23,6 @@ import java.lang.reflect.Method
 import scala.xml._
 import java.util.Date
 
-import net.liftweb.http.{S, SHtml}
-import net.liftweb.http.js._
 import net.liftweb.common._
 import net.liftweb.json._
 import net.liftweb.util._
@@ -186,23 +184,7 @@ trait BaseMappedField extends SelectableField with Bindable with MixableMappedFi
    */
   protected[mapper] def doneWithSave(): Unit
 
-  def asJsExp: JsExp
-
-  def asJs: List[(String, JsExp)] = List((name, asJsExp))
-
-  /**
-   * What form elements are we going to add to this field?
-   */
-  def formElemAttrs: scala.Seq[SHtml.ElemAttr] = Nil
-
   def renderJs_? = true
-
-  /**
-   * This is where the instance creates its "toForm" stuff.
-   * The actual toForm method wraps the information based on
-   * mode.
-   */
-  def _toForm: Box[NodeSeq]
 }
 
 /**
@@ -238,21 +220,6 @@ trait MappedNullableField[NullableFieldType <: Any,OwnerType <: Mapper[OwnerType
   override final def dbNotNull_? : Boolean = false
 
   override def toString: String = get.map(_.toString) openOr ""
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] =
-  S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-    Full(appendFieldId(<input type={formInputType}
-                       name={funcName}
-                       value={get match {
-                         case null => ""
-                         case Full(null) => ""
-                         case Full(s) => s.toString
-                         case _ => ""
-                       }}/>))
-  }
 }
 
 /**
@@ -427,7 +394,7 @@ trait MappedField[FieldType <: Any,OwnerType <: Mapper[OwnerType]] extends Typed
   /**
    * The display name of this field (e.g., "First Name")
    */
-  override def displayName: String = MapperRules.displayNameCalculator.vend(fieldOwner, S.locale, name) 
+  override def displayName: String = MapperRules.displayNameCalculator.vend(fieldOwner, java.util.Locale.getDefault, name)
 
   def resetDirty(): Unit = {
     if (safe_?) dirty_?(false)
@@ -439,50 +406,14 @@ trait MappedField[FieldType <: Any,OwnerType <: Mapper[OwnerType]] extends Typed
    */
   def setFromAny(value: Any): FieldType
 
-  def toFormAppendedAttributes: MetaData =
-  if (Props.mode == Props.RunModes.Test)
-  new PrefixedAttribute("lift", "field_name", Text(calcFieldName), Null)
-  else Null
-
   def calcFieldName: String = fieldOwner.getSingleton.internal_dbTableName+":"+name
 
-
-  def toForm: Box[NodeSeq] = {
-    def mf(in: scala.xml.Node): NodeSeq = in match {
-      case g: Group => g.nodes.flatMap(mf)
-      case e: Elem => e % toFormAppendedAttributes
-      case other => other
-    }
-
-    _toForm.map(_.flatMap(mf) ).map(SHtml.ElemAttr.applyToAllElems(_, formElemAttrs))
-  }
-
   /**
-   * Create an input field for the item
+   * Form rendering was removed during the webkit decoupling; the mapper layer
+   * is ORM-only. `toForm` is abstract in util.BaseField, so it remains here as
+   * a no-op stub returning Empty.
    */
-  override def _toForm: Box[NodeSeq] =
-  S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-    Full(appendFieldId(<input type={formInputType}
-                       name={funcName}
-                       value={get match {case null => "" case s => s.toString}}/>))
-  }
-
-  /**
-   * When building the form field, what's the input element's
-   * type attribute.  Defaults to 'text', but change to 'email'
-   * or other HTML5 values.
-   */
-  protected def formInputType = "text"
-
-  /**
-   * If the field has a defined fieldId, append it
-   */
-  protected def appendFieldId(in: Elem): Elem = fieldId match {
-    case Some(i) =>
-      import util.Helpers._
-      in % ("id" -> i)
-    case _ => in
-  }
+  def toForm: Box[NodeSeq] = Empty
 
   /**
    * Set the field to the Box value if the Box is Full

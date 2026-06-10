@@ -23,10 +23,9 @@ import java.util.Date
 
 import util._
 import common.{Box, Full, Empty, Failure}
-import http.S
-import http.js._
 import json._
-import S._
+// OBP fork: webkit removed — S.? validation messages inlined as literals;
+// S/js form+JS members (_toForm / toForm Elem override / asJsExp) had no OBP call-sites.
 
 import scala.xml.{NodeSeq, Text, Elem}
 
@@ -45,7 +44,7 @@ abstract class MappedPoliteString[T <: Mapper[T]](towner: T, theMaxLen: Int) ext
 trait ValidateLength extends MixableMappedField {
   self: MappedString[_] =>
 
-  def defaultErrorMessage = S.?("Field too long.  Maximum Length")+": "+maxLen
+  def defaultErrorMessage = "Field too long.  Maximum Length"+": "+maxLen
 
   abstract override def validations = valMaxLen(maxLen, defaultErrorMessage) _ :: super.validations
 
@@ -141,23 +140,8 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
     orgData.setFrom(data)
   }
 
-  override def _toForm: Box[Elem] =
-  fmapFunc({s: List[String] => this.setFromAny(s)}){name =>
-    Full(appendFieldId(<input type={formInputType} maxlength={maxLen.toString}
-                       name={name}
-                       value={get match {case null => "" case s => s.toString}}/>))}
-
   protected def i_obscure_!(in : String) : String = {
     ""
-  }
-
-  override def toForm: Box[Elem] = {
-
-    super.toForm match {
-      case Full(IsElem(elem)) => Full(elem)
-      case _ =>
-        Empty
-    }
   }
 
   override def setFromAny(in: Any): String = {
@@ -177,8 +161,6 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
   }
 
   override def apply(v: String): T = super.apply(v)
-
-  def asJsExp: JsExp = JE.Str(get)
 
   def jdbcFriendly(field : String): String = data.get
 

@@ -31,8 +31,9 @@ import common._
 import json._
 import util.Helpers._
 import util.{SourceFieldMetadata, NamedPF, FieldError, Helpers,CssSel,PassThru}
-import http.{LiftRules, S, SHtml, RequestMemoize, Factory}
-import http.js._
+// OBP fork: webkit removed. `Factory` now resolves to the same-package
+// net.liftweb.mapper.Factory (MapperFactory.scala); LiftRules / S / SHtml /
+// RequestMemoize / http.js usages were deleted along with the web/JS/form code.
 
 trait BaseMetaMapper {
   type RealType <: Mapper[RealType]
@@ -416,8 +417,9 @@ trait MetaMapper[A<:Mapper[A]] extends BaseMetaMapper with Mapper[A] {
 
   def create: A = createInstance
 
-  object addlQueryParams extends net.liftweb.http.RequestVar[List[QueryParam[A]]](Nil) {
-    override val __nameSalt = randomString(10)
+  // OBP fork: webkit-free per-thread holder (was net.liftweb.http.RequestVar).
+  object addlQueryParams extends net.liftweb.proto.RequestVar[List[QueryParam[A]]](Nil) {
+    override lazy val __nameSalt = randomString(10)
   }
 
   private[mapper] def addFields(what: String, whereAdded: Boolean,
@@ -1244,12 +1246,6 @@ trait MetaMapper[A<:Mapper[A]] extends BaseMetaMapper with Mapper[A] {
   mappedFieldList.filter(_.field.dbDisplay_?).
   flatMap(mft => displayFieldAsLineElement(??(mft.method, toLine).asHtml))
 
-  def asJs(actual: A): JsExp = {
-    JE.JsObj(("$lift_class", JE.Str(dbTableName)) :: mappedFieldList.
-             map(f => ??(f.method, actual)).filter(_.renderJs_?).flatMap(_.asJs).toList :::
-             actual.suplementalJs(Empty) :_*)
-  }
-
   /**
    * Get a list of all the fields
    * @return a list of all the fields
@@ -1813,30 +1809,6 @@ trait KeyedMetaMapper[Type, A<:KeyedMapper[Type, A]] extends MetaMapper[A] with 
   type Q = MappedForeignKey[AnyBound, A, OO] with MappedField[AnyBound, A] forSome
   {type OO <: KeyedMapper[AnyBound, OO]}
 
-  def asSafeJs(actual: A, f: KeyObfuscator): JsExp = {
-    val pk = actual.primaryKeyField
-    val first = (pk.name, JE.Str(f.obscure(self, pk.get)))
-    JE.JsObj(
-      first ::
-        ("$lift_class", JE.Str(dbTableName)) ::
-        mappedFieldList
-          .map(f => this.??(f.method, actual))
-          .filter(f => !f.dbPrimaryKey_? && f.renderJs_?)
-          .flatMap{
-            case fk0: MappedForeignKey[_, _, _] with MappedField[_, _] =>
-              val fk = fk0.asInstanceOf[Q]
-              val key = f.obscure(fk.dbKeyToTable, fk.get)
-              List(
-                (fk.name, JE.Str(key)),
-                (fk.name+"_obj", JE.AnonFunc("index", JE.JsRaw("return index["+key.encJs+"];").cmd))
-              )
-            case x => x.asJs
-          }
-          .toList :::
-        actual.suplementalJs(Full(f)) : _*
-    )
-  }
-
   private def convertToQPList(prod: Product): Array[QueryParam[A]] = {
     var pos = 0
     val ret = new Array[QueryParam[A]](prod.productArity)
@@ -1855,14 +1827,7 @@ trait KeyedMetaMapper[Type, A<:KeyedMapper[Type, A]] extends MetaMapper[A] with 
     case v => Full(v.toString)
   }
 
-  private object unapplyMemo extends RequestMemoize[Any, Box[A]] {
-    override protected def __nameSalt = Helpers.randomString(20)
-  }
-
-  def unapply(key: Any): Option[A] = {
-    if (S.inStatefulScope_?) unapplyMemo(key, this.find(key))
-    else this.find(key)
-  }
+  def unapply(key: Any): Option[A] = this.find(key)
 
   def find(key: Any): Box[A] =
   key match {
@@ -1967,156 +1932,14 @@ trait KeyedMetaMapper[Type, A<:KeyedMapper[Type, A]] extends MetaMapper[A] with 
     }
   }
 
-  override def afterSchemifier: Unit = {
-    if (crudSnippets_?) {
-      LiftRules.snippets.append(crudSnippets)
-    }
-  }
-
   /**
-   * Override this definition in your model to enable CRUD snippets
-   * for that model. Set to false by default.
-   *
-   * Remember to override editSnippetSetup and viewSnippetSetup as well,
-   * as the defaults are broken.
-   *
-   * @return false
+   * OBP fork: the CRUD form/snippet machinery (crudSnippets, formSnippet,
+   * add/edit/view snippets, objFromIndexedParam) was removed during the webkit
+   * decoupling — it depended on LiftRules.snippets, SHtml and S.request. The
+   * mapper layer is now ORM-only, so there is no schema-time snippet
+   * registration to perform.
    */
-  def crudSnippets_? = false
-
-  /**
-   * Defines the default CRUD snippets. Override if you want to change
-   * the names of the snippets. Defaults are "add", "edit", and "view".
-   *
-   * (No, there's no D in CRUD.)
-   */
-  def crudSnippets: LiftRules.SnippetPF = {
-    val Name = internal_dbTableName
-
-    NamedPF("crud "+Name) {
-      case Name :: "addForm"  :: _ => addFormSnippet
-      case Name :: "editForm" :: _ => editFormSnippet
-      case Name :: "viewTransform" :: _ => viewTransform
-    }
-  }
-
-   /**
-   * Provides basic transformation of <code>html</code> to a form for the
-   * given <code>obj</code>. When the form is submitted, <code>cleanup</code>
-   * is run.
-   */
-  def formSnippet(html: NodeSeq, obj: A, cleanup: (A => Unit)): NodeSeq = {
-    val name = internal_dbTableName
-
-    def callback(): Unit = {
-      cleanup(obj)
-    }
-
-    val submitTransform: (NodeSeq)=>NodeSeq =
-      "type=submit" #> SHtml.onSubmitUnit(callback _)
-
-    val otherTransforms =
-      obj.fieldMapperTransforms(_.toForm openOr Text("")).reverse ++
-      obj.fieldTransforms.reverse
-
-    otherTransforms.foldRight(submitTransform)(_ andThen _) apply html
-  }
-
-  /**
-   * Base add form snippet. Fetches object from
-   * <code>addSnippetSetup</code> and invokes
-   * <code>addSnippetCallback</code> when the form is submitted.
-   */
-  def addFormSnippet(html: NodeSeq): NodeSeq = {
-    formSnippet(html, addSnippetSetup, addSnippetCallback _)
-  }
-
- /**
-   * Base edit form snippet. Fetches object from
-   * <code>editSnippetSetup</code> and invokes
-   * <code>editSnippetCallback</code> when the form is submitted.
-   */
-  def editFormSnippet(html: NodeSeq): NodeSeq = {
-    formSnippet(html, editSnippetSetup, editSnippetCallback _)
-  }
-
-  /**
-   * Basic transformation of <code>html</code> to HTML for displaying
-   * the object from <code>viewSnippetSetup</code>.
-   */
-  def viewTransform(html: NodeSeq): NodeSeq = {
-    val name = internal_dbTableName
-    val obj: A = viewSnippetSetup
-
-    val otherTransforms =
-      obj.fieldMapperTransforms(_.asHtml).reverse ++
-      obj.fieldTransforms.reverse
-
-    otherTransforms.foldRight(PassThru: (NodeSeq)=>NodeSeq)(_ andThen _) apply html
-  }
-
-  /**
-   * Lame attempt at automatically getting an object from the HTTP parameters.
-   * BROKEN! DO NOT USE! Only here so that existing sub-classes KeyedMetaMapper
-   * don't have to implement new methods when I commit the CRUD snippets code.
-   */
-  def objFromIndexedParam: Box[A] = {
-    val found = for (
-      req <- S.request.toList;
-      (param, value :: _) <- req.params;
-      fh <- mappedFieldList if fh.field.dbIndexed_? == true && fh.name.equals(param)
-    ) yield find(value)
-
-    found.filter(obj => obj match {
-        case Full(obj) => true
-        case _         => false
-      }) match {
-      case obj :: _ => obj
-      case _        => Empty
-    }
-  }
-
-  /**
-   * Default setup behavior for the add snippet. Creates a new mapped object.
-   *
-   * @return new mapped object
-   */
-  def addSnippetSetup: A = {
-    this.create
-  }
-
-  /**
-   * Default setup behavior for the edit snippet. BROKEN! MUST OVERRIDE IF
-   * USING CRUD SNIPPETS!
-   *
-   * @return a mapped object of this metamapper's type
-   */
-  def editSnippetSetup: A = {
-    objFromIndexedParam.openOrThrowException("Comment says this is broken")
-  }
-  /**
-   * Default setup behavior for the view snippet. BROKEN! MUST OVERRIDE IF
-   * USING CRUD SNIPPETS!
-   *
-   * @return a mapped object of this metamapper's type
-   */
-  def viewSnippetSetup: A = {
-    objFromIndexedParam.openOrThrowException("Comment says this is broken")
-  }
-  /**
-   * Default callback behavior of the edit snippet. Called when the user
-   * presses submit. Saves the passed in object.
-   *
-   * @param obj mapped object of this metamapper's type
-   */
-  def editSnippetCallback(obj: A): Unit = { obj.save }
-  /**
-   * Default callback behavior of the add snippet. Called when the user
-   * presses submit. Saves the passed in object.
-   *
-   * @param obj mapped object of this metamapper's type
-   */
-  def addSnippetCallback(obj: A): Unit = { obj.save }
+  override def afterSchemifier: Unit = {}
 }
 
 

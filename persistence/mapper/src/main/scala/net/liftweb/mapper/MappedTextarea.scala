@@ -17,24 +17,10 @@
 package net.liftweb
 package mapper
 
-import http.S
 import common._
 
-import scala.xml.Elem
-
+// OBP fork: webkit removed — the SHtml/S-based _toForm textarea builder had no OBP call-sites.
 abstract class MappedTextarea[T<:Mapper[T]](owner : T, maxLen: Int) extends MappedString[T](owner, maxLen) {
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[Elem] = {
-    S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-    Full(appendFieldId(<textarea name={funcName}
-	               rows={textareaRows.toString}
-	               cols={textareaCols.toString}>{
-	   get match {
-	     case null => ""
-	     case s => s}}</textarea>))}
-  }
 
   override def toString: String = {
     val v = get

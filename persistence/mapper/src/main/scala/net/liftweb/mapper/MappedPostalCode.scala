@@ -24,7 +24,8 @@ import scala.xml.{Text, Elem}
 import common._
 import util._
 import Helpers._
-import http.{S, SHtml}
+// OBP fork: webkit removed — SHtml.select _toForm builders dropped; S.? localisation
+// keys inlined as literals and S.locale replaced with Locale.getDefault.
 
 object Countries extends Enumeration(1) {
 
@@ -68,7 +69,7 @@ object Countries extends Enumeration(1) {
   def I18NCountry = new I18NCountry
 
   class I18NCountry extends Val {
-    override def toString(): String = S.?("country_" + id)
+    override def toString(): String = "country_" + id
   }
 }
 
@@ -79,12 +80,6 @@ abstract class MappedLocale[T <: Mapper[T]](owner: T) extends MappedString[T](ow
     case Nil => Locale.getDefault
     case x :: _ => x
   }
-
-  override def _toForm: Box[Elem] =
-  Full(SHtml.select(Locale.getAvailableLocales.
-                    toList.sortWith(_.getDisplayName < _.getDisplayName).
-                    map(lo => (lo.toString, lo.getDisplayName)),
-                    Full(this.get), set) % ("id" -> fieldId))
 }
 
 abstract class MappedTimeZone[T <: Mapper[T]](owner: T) extends MappedString[T](owner, 32) {
@@ -94,10 +89,6 @@ abstract class MappedTimeZone[T <: Mapper[T]](owner: T) extends MappedString[T](
     case null => TimeZone.getDefault
     case x => x
   }
-
-  override def _toForm: Box[Elem] =
-  Full(SHtml.select(MappedTimeZone.timeZoneList, Full(this.get), set) %
-       ("id" -> fieldId))
 }
 
 object MappedTimeZone {
@@ -111,7 +102,7 @@ object MappedTimeZone {
 abstract class MappedCountry[T <: Mapper[T]](owner: T) extends MappedEnum[T, Countries.type](owner, Countries) {
 
   override def buildDisplayList: List[(Int, String)] = {
-    val collator = java.text.Collator.getInstance(S.locale)
+    val collator = java.text.Collator.getInstance(Locale.getDefault)
 
     super.buildDisplayList.sortWith((s1, s2) =>
       collator.compare(s1._2, s2._2) < 0)
@@ -124,8 +115,8 @@ abstract class MappedPostalCode[T <: Mapper[T]](owner: T, country: MappedCountry
 
   private def genericCheck(zip: String): List[FieldError] = {
     zip match {
-      case null => List(FieldError(this, Text(S.?("invalid.postal.code"))))
-      case s if s.length < 3 => List(FieldError(this, Text(S.?("invalid.postal.code"))))
+      case null => List(FieldError(this, Text("invalid.postal.code")))
+      case s if s.length < 3 => List(FieldError(this, Text("invalid.postal.code")))
       case _ => Nil
     }
   }
@@ -134,22 +125,22 @@ abstract class MappedPostalCode[T <: Mapper[T]](owner: T, country: MappedCountry
 
   override def validations = country.get match {
     case Countries.USA =>  valRegex(REPat.compile("[0-9]{5}(\\-[0-9]{4})?"),
-                                    S.?("invalid.zip.code")) _ :: super.validations
+                                    "invalid.zip.code") _ :: super.validations
 
     case Countries.Sweden => valRegex(REPat.compile("[0-9]{3}[ ]?[0-9]{2}"),
-                                      S.?("invalid.postal.code")) _ :: super.validations
+                                      "invalid.postal.code") _ :: super.validations
 
     case Countries.Australia => valRegex(REPat.compile("(0?|[1-9])[0-9]{3}"),
-                                         S.?("invalid.postal.code")) _ :: super.validations
+                                         "invalid.postal.code") _ :: super.validations
 
     case Countries.Canada => valRegex(REPat.compile("[A-Z][0-9][A-Z][ ][0-9][A-Z][0-9]"),
-                                      S.?("invalid.postal.code")) _ :: super.validations
+                                      "invalid.postal.code") _ :: super.validations
 
     case Countries.Germany => valRegex(REPat.compile("[0-9]{5}"),
-                                       S.?("invalid.postal.code")) _ :: super.validations
+                                       "invalid.postal.code") _ :: super.validations
 
     case Countries.UK =>  valRegex(REPat.compile("[A-Z]{1,2}[0-9R][0-9A-Z]?[0-9][ABD-HJLNP-UW-Z]{2}"),
-                                     S.?("invalid.postal.code")) _ :: super.validations
+                                     "invalid.postal.code") _ :: super.validations
 
     case _ => genericCheck _ :: super.validations
   }

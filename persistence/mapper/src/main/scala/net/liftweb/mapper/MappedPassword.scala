@@ -23,12 +23,11 @@ import java.sql.{ResultSet, Types}
 import java.lang.reflect.Method
 import scala.xml.{Node, Text, NodeSeq}
 import java.util.Date
-import net.liftweb.http.{S}
-import net.liftweb.http.S._
 import net.liftweb.util._
 import net.liftweb.json._
 import net.liftweb.common._
-import net.liftweb.http.js._
+// OBP fork: webkit removed — S.? validation messages inlined as literals;
+// the S/SHtml _toForm password widget and asJsExp had no OBP call-sites.
 
 import org.mindrot.jbcrypt.BCrypt
 
@@ -111,13 +110,13 @@ extends MappedField[String, T] {
   protected def real_i_set_!(value : String) : String = {
     value match {
       case "*" | null | MappedPassword.blankPw if (value.length < 3) =>
-       invalidPw = true ; invalidMsg = S.?("password.must.be.set") ; password.set("*")
+       invalidPw = true ; invalidMsg = "password.must.be.set" ; password.set("*")
       case MappedPassword.blankPw => return "*"
       case _ if (value.length > 4) => invalidPw = false;
       val bcrypted = BCrypt.hashpw(value, MappedPassword.bcryptStrength.map(BCrypt.gensalt(_)) openOr BCrypt.gensalt())
       password.set("b;"+bcrypted.substring(0,44))
       salt_i.set(bcrypted.substring(44))
-      case _ => invalidPw = true ; invalidMsg = S.?("password.too.short"); password.set("*")
+      case _ => invalidPw = true ; invalidMsg = "password.too.short"; password.set("*")
     }
     this.dirty_?( true)
     "*"
@@ -126,7 +125,7 @@ extends MappedField[String, T] {
   def setList(in: List[String]): Boolean =
   in match {
     case x1 :: x2 :: Nil if x1 == x2 => this.set(x1) ; true
-    case _ => invalidPw = true; invalidMsg = S.?("passwords.do.not.match"); false
+    case _ => invalidPw = true; invalidMsg = "passwords.do.not.match"; false
   }
 
 
@@ -136,16 +135,14 @@ extends MappedField[String, T] {
         this.set(a(0))
       case l : List[_] if (l.length == 2 && l.head == l(1)) =>
         this.set(l.head.asInstanceOf[String])
-      case _ => 
+      case _ =>
         invalidPw = true
-        invalidMsg = S.?("passwords.do.not.match")
+        invalidMsg = "passwords.do.not.match"
     }
     get
   }
 
   override def renderJs_? = false
-
-  def asJsExp: JsExp = throw new NullPointerException("No way")
 
   /**
    * Test to see if an incoming password matches
@@ -162,7 +159,7 @@ extends MappedField[String, T] {
   override def validate : List[FieldError] = {
     if (!invalidPw && password.get != "*") Nil
     else if (invalidPw) List(FieldError(this, Text(invalidMsg)))
-    else List(FieldError(this, Text(S.?("password.must.be.set"))))
+    else List(FieldError(this, Text("password.must.be.set")))
   }
 
   def real_convertToJDBCFriendly(value: String): Object =
@@ -187,25 +184,6 @@ extends MappedField[String, T] {
   }
 
   protected def i_obscure_!(in : String) : String = in
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] = {
-    S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-      Full(<span>{appendFieldId(<input type={formInputType} name={funcName}
-            value={get.toString}/>)}&nbsp;{S.?("repeat")}&nbsp;<input
-            type={formInputType} name={funcName}
-            value={get.toString}/></span>)
-    }
-  }
-
-  /**
-   * When building the form field, what's the input element's
-   * type attribute.
-   */
-  override protected def formInputType = "password"
-
 
   def jdbcFriendly(columnName : String) = {
     if (columnName.endsWith("_slt")) {

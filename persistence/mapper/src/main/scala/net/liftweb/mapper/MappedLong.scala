@@ -24,9 +24,8 @@ import java.util.Date
 import common._
 import util.Helpers._
 import util._
-import http.SHtml
-import http.js._
 import json._
+// OBP fork: webkit removed — SHtml.checkbox _toForm and asJsExp had no OBP call-sites.
 
 import scala.xml.{Text, NodeSeq}
 
@@ -147,8 +146,6 @@ abstract class MappedEnumList[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner:
   override def readPermission_? = true
   override def writePermission_? = true
 
-  def asJsExp: JsExp = JE.JsArray(get.map(v => JE.Num(v.id)) :_*)
-
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(toLong))
 
   def real_convertToJDBCFriendly(value: Seq[ENUM#Value]): Object = new java.lang.Long(Helpers.toLong(value))
@@ -207,12 +204,6 @@ abstract class MappedEnumList[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner:
    * Given the driver type, return the string required to create the column in the database
    */
   def fieldCreatorString(dbType: DriverType, colName: String): String = colName + " " + dbType.enumListColumnType + notNullAppender()
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] =
-  Full(SHtml.checkbox[ENUM#Value](enum.values.iterator.toList, get,this(_)).toForm)
 }
 
 /**
@@ -296,8 +287,6 @@ abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends Mappe
     }
     data
   }
-
-  def asJsExp: JsExp = get.map(v => JE.Num(v)) openOr JE.JsNull
 
   def asJsonValue: Box[JsonAST.JValue] =
     Full(get.map(v => JsonAST.JInt(v)) openOr JsonAST.JNull)
@@ -433,8 +422,6 @@ abstract class MappedLong[T<:Mapper[T]](val fieldOwner: T) extends MappedField[L
     }
     data
   }
-
-  def asJsExp: JsExp = JE.Num(get)
 
   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get))
 

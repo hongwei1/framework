@@ -27,10 +27,9 @@ import net.liftweb._
 import util._
 import common._
 import Helpers._
-import http._
 import json._
-import S._
-import js._
+// OBP fork: webkit removed — date parse/format now go through MapperDateConverter
+// (was LiftRules.dateTimeConverter()); S/js form+JS members had no OBP call-sites.
 
 import scala.xml.{Text, NodeSeq}
 
@@ -40,14 +39,14 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
 
   /**
    * This method defines the string parsing semantics of this field. Used in setFromAny.
-   * By default uses LiftRules.dateTimeConverter's parseDateTime; override for field-specific behavior
+   * By default uses MapperDateConverter.parseDateTime; override for field-specific behavior
    */
-  def parse(s: String): Box[Date] = LiftRules.dateTimeConverter().parseDateTime(s)
+  def parse(s: String): Box[Date] = MapperDateConverter.parseDateTime(s)
   /**
    * This method defines the string parsing semantics of this field. Used in toString, _toForm.
-   * By default uses LiftRules.dateTimeConverter's formatDateTime; override for field-specific behavior
+   * By default uses MapperDateConverter.formatDateTime; override for field-specific behavior
    */
-  def format(d: Date): String = LiftRules.dateTimeConverter().formatDateTime(d)
+  def format(d: Date): String = MapperDateConverter.formatDateTime(d)
 
   import scala.reflect.runtime.universe._
   def manifest: TypeTag[Date] = typeTag[Date]
@@ -113,8 +112,6 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
     case d: Date => d.getTime / 1000L
   }
 
-  def asJsExp: JsExp = JE.Num(toLong)
-
   /**
    * Get the JDBC SQL Type for this field
    */
@@ -132,16 +129,6 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
 
   protected def i_obscure_!(in : Date) : Date = {
     new Date(0L)
-  }
-
-  /**
-   * Create an input field for the item
-   */
-  override def _toForm: Box[NodeSeq] =
-  S.fmapFunc({s: List[String] => this.setFromAny(s)}){funcName =>
-  Full(appendFieldId(<input type={formInputType}
-                     name={funcName}
-                     value={get match {case null => "" case s => format(s)}}/>))
   }
 
   override def setFromAny(f: Any): Date = f match {

@@ -20,7 +20,7 @@ package mapper
 import common._
 import util._
 import Helpers._
-import http.{S, SHtml}
+// OBP fork: webkit removed — SHtml.selectObj _toForm dropped; S.? localisation inlined.
 
 import scala.xml.NodeSeq
 
@@ -36,16 +36,6 @@ abstract class MappedUniqueId[T<:Mapper[T]](override val fieldOwner: T, override
   */
 abstract class MappedBirthYear[T <: Mapper[T]](owner: T, minAge: Int) extends MappedInt[T](owner) {
   override def defaultValue = year(now) - minAge
-
-  override def _toForm: Box[NodeSeq] = {
-    val end = (year(now) - minAge)
-    val start = end - 100
-    Full(SHtml.selectObj((start to end).
-		  toList.
-		  reverse.
-		  map(y => (y, y.toString)),
-		  Full(get), this.set) % ("id" -> fieldId))
-  }
 }
 
 abstract class MappedGender[T <: Mapper[T]](owner: T) extends MappedEnum(owner, Genders) {
@@ -59,7 +49,7 @@ object Genders extends Enumeration {
 
   class I18NGender(id : Int, name: String) extends Val(id, name) {
     override def toString = {
-      S.?(name)
+      name
     }
   }
 }

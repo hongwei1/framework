@@ -20,8 +20,8 @@ package mapper
 import java.util.Date
 
 import scala.xml.{Elem, NodeSeq}
-import http.S
-import http.js._
+// OBP fork: webkit removed — net.liftweb.http.{S} and net.liftweb.http.js usages
+// (asJs / asSafeJs / suplementalJs / form-submission toForm) were deleted.
 import util._
 import common.{Box, Empty, Full, ParamFailure}
 
@@ -99,13 +99,6 @@ trait Mapper[A<:Mapper[A]] extends BaseMapper with Serializable with SourceInfo 
     getSingleton.asHtml(this)
   }
 
-  /**
-   * If the instance calculates any additional
-   * fields for JSON object, put the calculated fields
-   * here
-   */
-  def suplementalJs(ob: Box[KeyObfuscator]): List[(String, JsExp)] = Nil
-
   def validate : List[FieldError] = {
     runSafe {
       getSingleton.validate(this)
@@ -120,12 +113,6 @@ trait Mapper[A<:Mapper[A]] extends BaseMapper with Serializable with SourceInfo 
     case Nil => Full(this)
     case xs => ParamFailure(xs.map(_.msg.text).mkString(", "), Empty, Empty, xs)
   }
-
-  /**
-   * Convert the model to a JavaScript object
-   */
-  def asJs: JsExp = getSingleton.asJs(this)
-
 
   /**
    * Given a name, look up the field
@@ -188,55 +175,16 @@ trait Mapper[A<:Mapper[A]] extends BaseMapper with Serializable with SourceInfo 
   getSingleton.flatMapFieldTitleForm2(this, func)
 
   /**
-   * Present the model as a form and execute the function on submission of the form
-   *
-   * @param button - If it's Full, put a submit button on the form with the value of the parameter
-   * @param onSuccess - redirect to the URL if the model validates, otherwise display the errors
-   *
-   * @return the form
-   */
-  def toForm(button: Box[String], onSuccess: String): NodeSeq =
-  toForm(button, (what: A) => {what.validate match {
-        case Nil => what.save ; S.redirectTo(onSuccess)
-        case xs => S.error(xs)
-      }})
-
-  /**
    * Present the model as a HTML using the same formatting as toForm
    *
    * @return the html view of the model
    */
   def toHtml: NodeSeq = getSingleton.toHtml(this)
 
-  /**
-   * Present the model as a form and execute the function on submission of the form
-   *
-   * @param button - If it's Full, put a submit button on the form with the value of the parameter
-   * @param f - the function to execute on form submission
-   *
-   * @return the form
-   */
-  def toForm(button: Box[String], f: A => Any): NodeSeq =
-  getSingleton.toForm(this) ++
-  S.fmapFunc((ignore: List[String]) => f(this)){
-    (name: String) =>
-    (<input type='hidden' name={name} value="n/a" />)} ++
-  (button.map(b => getSingleton.formatFormElement( <xml:group>&nbsp;</xml:group> , <input type="submit" value={b}/> )) openOr scala.xml.Text(""))
-
-  def toForm(button: Box[String], redoSnippet: NodeSeq => NodeSeq, onSuccess: A => Unit): NodeSeq = {
-    val snipName = S.currentSnippet
-    def doSubmit(): Unit = {
-      this.validate match {
-        case Nil => onSuccess(this)
-        case xs => S.error(xs)
-          snipName.foreach(n => S.mapSnippet(n, redoSnippet))
-      }
-    }
-
-    getSingleton.toForm(this) ++
-    S.fmapFunc((ignore: List[String]) => doSubmit())(name => <input type='hidden' name={name} value="n/a" />) ++
-    (button.map(b => getSingleton.formatFormElement( <xml:group>&nbsp;</xml:group> , <input type="submit" value={b}/> )) openOr scala.xml.Text(""))
-  }
+  // OBP fork: the form-submission `toForm` overloads were removed during the
+  // webkit decoupling — they wired S.fmapFunc / S.redirectTo / S.error /
+  // S.currentSnippet / S.mapSnippet into Lift's stateful request scope. The
+  // mapper layer no longer renders or processes forms.
 
   def saved_? : Boolean = getSingleton.saved_?(this)
 
@@ -425,8 +373,6 @@ trait KeyedMapper[KeyType, OwnerType<:KeyedMapper[KeyType, OwnerType]] extends M
   override def comparePrimaryKeys(other: OwnerType): Boolean = primaryKeyField.get == other.primaryKeyField.get
 
   def reload: OwnerType = getSingleton.find(By(primaryKeyField, primaryKeyField.get)) openOr this
-
-  def asSafeJs(f: KeyObfuscator): JsExp = getSingleton.asSafeJs(this, f)
 
   override def hashCode(): Int = primaryKeyField.get.hashCode
 
