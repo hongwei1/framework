@@ -19,13 +19,15 @@ package proto
 
 import net.liftweb.common._
 import net.liftweb.util._
-import net.liftweb.http._
 import scala.reflect.Manifest
 
 import java.util.regex.Pattern
 
 /**
- * This singleton contains the rules for persistence
+ * This singleton contains the rules for persistence.
+ *
+ * OBP fork: `extends Factory` now resolves the webkit-free `net.liftweb.proto.Factory`
+ * (same package, see Factory.scala) instead of `net.liftweb.http.Factory`.
  */
 object ProtoRules extends Factory with LazyLoggable {
   /**
