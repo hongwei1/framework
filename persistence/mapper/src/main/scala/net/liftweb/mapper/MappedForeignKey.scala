@@ -19,13 +19,10 @@ package mapper
 
 import common._
 
-
 import scala.xml.{NodeSeq, Text, Elem}
 // OBP fork: webkit removed — SHtml.selectObj _toForm, asSafeJs/asJsExp JS members
 // and the S.?-localised immutable message had no OBP call-sites.
-import json._
 import util.FieldError
-
 
 /**
  * A trait that defines foreign key references
@@ -60,7 +57,6 @@ trait BaseForeignKey extends BaseMappedField {
    */
   def dbAddedForeignKey: Box[() => Unit]
 }
-
 
 object MappedForeignKey {
   implicit def getObj[KeyType,
@@ -154,7 +150,6 @@ with LifecycleCallbacks {
   private var _obj: Box[Other] = Empty
   private var _calcedObj = false
 
-
   /**
    * Set the value from a possible instance of the foreign mapper class.
    * v will be cached in obj.
@@ -198,7 +193,6 @@ with LifecycleCallbacks {
     else Nil
 }
 
-
 abstract class MappedLongForeignKey[T<:Mapper[T],O<:KeyedMapper[Long, O]](theOwner: T, _foreignMeta: => KeyedMetaMapper[Long, O])
 extends MappedLong[T](theOwner) with MappedForeignKey[Long,T,O] with BaseForeignKey {
   def defined_? : Boolean = i_is_! > 0L
@@ -222,14 +216,8 @@ extends MappedLong[T](theOwner) with MappedForeignKey[Long,T,O] with BaseForeign
 
   override def dbForeignKey_? = true
 
-
-  override def asJsonValue: Box[JsonAST.JValue] =
-    if (defined_?) super.asJsonValue else Full(JsonAST.JNull)
-
   override def setFromAny(in: Any): Long =
   in match {
-    case JsonAST.JNull => this.set(0L)
-    case JsonAST.JInt(bigint) => this.set(bigint.longValue)
     case o => super.setFromAny(o)
   }
 

@@ -25,9 +25,7 @@ import Helpers._
 import java.util.Date
 // OBP fork: webkit removed — SHtml.selectObj _toForm and asJsExp had no OBP call-sites.
 import reflect.runtime.universe._
-import net.liftweb.json._
 import scala.xml.{Text, NodeSeq}
-
 
 /**
  * Warning: Do not use unnamed Enumerations with 2.8.1 as this will cause too many items to be displayed in the dropdown.
@@ -84,7 +82,6 @@ abstract class MappedEnum[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner: T, 
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JsonAST.JInt(v.id))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -114,12 +111,8 @@ abstract class MappedEnum[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner: T, 
   def jdbcFriendly(field: String) = new java.lang.Integer(toInt)
   override def jdbcFriendly = new java.lang.Integer(toInt)
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get.id))
-
-
   override def setFromAny(in: Any): ENUM#Value = {
     in match {
-      case JsonAST.JInt(bi) => this.set(fromInt(bi.intValue))
       case n: Int => this.set(fromInt(n))
       case n: Long => this.set(fromInt(n.toInt))
       case n: Number => this.set(fromInt(n.intValue))
@@ -228,7 +221,6 @@ abstract class MappedIntIndex[T<:Mapper[T]](owner : T) extends MappedInt[T](owne
 
 }
 
-
 abstract class MappedInt[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Int, T] {
   private var data: Int = defaultValue
   private var orgData: Int = defaultValue
@@ -274,7 +266,6 @@ abstract class MappedInt[T<:Mapper[T]](val fieldOwner: T) extends MappedField[In
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JsonAST.JInt(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -293,8 +284,6 @@ abstract class MappedInt[T<:Mapper[T]](val fieldOwner: T) extends MappedField[In
   override protected[mapper] def doneWithSave(): Unit = {
     orgData = data
   }
-
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get))
 
   protected def real_i_set_!(value : Int) : Int = {
     if (value != data) {
@@ -315,7 +304,6 @@ abstract class MappedInt[T<:Mapper[T]](val fieldOwner: T) extends MappedField[In
   override def setFromAny(in: Any): Int = {
     in match {
       case n: Int => this.set(n)
-      case JsonAST.JInt(bigint) => this.set(bigint.intValue)
       case n: Number => this.set(n.intValue)
       case (n: Number) :: _ => this.set(n.intValue)
       case Some(n: Number) => this.set(n.intValue)

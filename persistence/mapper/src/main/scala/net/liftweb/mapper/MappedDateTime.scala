@@ -17,8 +17,6 @@
 package net.liftweb
 package mapper
 
-
-
 import java.sql.{ResultSet, Types}
 import java.util.Date
 import java.lang.reflect.Method
@@ -27,7 +25,6 @@ import net.liftweb._
 import util._
 import common._
 import Helpers._
-import json._
 // OBP fork: webkit removed — date parse/format now go through MapperDateConverter
 // (was LiftRules.dateTimeConverter()); S/js form+JS members had no OBP call-sites.
 
@@ -81,7 +78,6 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JInt(v.getTime))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -101,11 +97,6 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
   }
 
   def dbFieldClass = classOf[Date]
-
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case v => JsonAST.JInt(v.getTime)
-  })
 
   def toLong: Long = get match {
     case null => 0L
@@ -132,8 +123,6 @@ abstract class MappedDateTime[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
   }
 
   override def setFromAny(f: Any): Date = f match {
-    case JsonAST.JNull => this.set(null)
-    case JsonAST.JInt(v) => this.set(new Date(v.longValue))
     case n: Number => this.set(new Date(n.longValue))
     case "" | null => this.set(null)
     case s: String => parse(s).map(d => this.set(d)).openOr(this.get)

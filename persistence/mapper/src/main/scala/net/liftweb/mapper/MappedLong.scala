@@ -24,11 +24,9 @@ import java.util.Date
 import common._
 import util.Helpers._
 import util._
-import json._
 // OBP fork: webkit removed — SHtml.checkbox _toForm and asJsExp had no OBP call-sites.
 
 import scala.xml.{Text, NodeSeq}
-
 
 abstract class MappedLongIndex[T<:Mapper[T]](theOwner: T) extends MappedLong[T](theOwner) with IndexedField[Long] {
 
@@ -125,7 +123,6 @@ abstract class MappedEnumList[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner:
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JArray(v.toList.map(x => JsonAST.JInt(x.id))))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -146,8 +143,6 @@ abstract class MappedEnumList[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner:
   override def readPermission_? = true
   override def writePermission_? = true
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(toLong))
-
   def real_convertToJDBCFriendly(value: Seq[ENUM#Value]): Object = new java.lang.Long(Helpers.toLong(value))
 
   private def rot(in: Int): Long = 1L << in
@@ -160,11 +155,8 @@ abstract class MappedEnumList[T<:Mapper[T], ENUM <: Enumeration](val fieldOwner:
   def jdbcFriendly(field: String) = new java.lang.Long(toLong)
   override def jdbcFriendly = new java.lang.Long(toLong)
 
-
-
   override def setFromAny(in: Any): Seq[ENUM#Value] = {
     in match {
-      case JsonAST.JInt(bi) => this.set(fromLong(bi.longValue))
       case n: Long => this.set( fromLong(n))
       case n: Number => this.set(fromLong(n.longValue))
       case (n: Number) :: _ => this.set(fromLong(n.longValue))
@@ -213,7 +205,6 @@ trait DefaultMillis extends TypedField[Long] {
   override def defaultValue: Long = millis
 }
 
-
 abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends MappedNullableField[Long, T] {
   private var data: Box[Long] = defaultValue
   private var orgData: Box[Long] = defaultValue
@@ -259,7 +250,6 @@ abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends Mappe
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = v.map(JsonAST.JInt(_))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -269,7 +259,6 @@ abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends Mappe
        */
       def asSeq(v: T): Box[Seq[SourceFieldInfo]] = Empty
     })
-
 
   protected def i_is_! : Box[Long] = data
   protected def i_was_! : Box[Long] = orgData
@@ -288,9 +277,6 @@ abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends Mappe
     data
   }
 
-  def asJsonValue: Box[JsonAST.JValue] =
-    Full(get.map(v => JsonAST.JInt(v)) openOr JsonAST.JNull)
-
   override def readPermission_? = true
   override def writePermission_? = true
 
@@ -308,8 +294,6 @@ abstract class MappedNullableLong[T<:Mapper[T]](val fieldOwner: T) extends Mappe
     in match {
       case n: Long => this.set(Full(n))
       case n: Number => this.set(Full(n.longValue))
-      case JsonAST.JNothing | JsonAST.JNull => this.set(Empty)
-      case JsonAST.JInt(n) => this.set(Full(n.longValue))
       case (n: Number) :: _ => this.set(Full(n.longValue))
       case Some(n: Number) => this.set(Full(n.longValue))
       case Full(n: Number) => this.set(Full(n.longValue))
@@ -387,7 +371,6 @@ abstract class MappedLong[T<:Mapper[T]](val fieldOwner: T) extends MappedField[L
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JsonAST.JInt(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -423,8 +406,6 @@ abstract class MappedLong[T<:Mapper[T]](val fieldOwner: T) extends MappedField[L
     data
   }
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JInt(get))
-
   override def readPermission_? = true
   override def writePermission_? = true
 
@@ -438,7 +419,6 @@ abstract class MappedLong[T<:Mapper[T]](val fieldOwner: T) extends MappedField[L
   override def setFromAny(in: Any): Long = {
     in match {
       case n: Long => this.set(n)
-      case JsonAST.JInt(bigint) => this.set(bigint.longValue)
       case n: Number => this.set(n.longValue)
       case (n: Number) :: _ => this.set(n.longValue)
       case Some(n: Number) => this.set(n.longValue)

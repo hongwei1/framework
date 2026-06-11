@@ -24,7 +24,6 @@ import net.liftweb.util._
 import java.util.Date
 // OBP fork: webkit removed — asJsExp (net.liftweb.http.js.JsExp) had no OBP call-sites.
 import scala.xml.{Text, NodeSeq}
-import net.liftweb.json._
 
 abstract class MappedDouble[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Double, T] {
 	private var data: Double = defaultValue
@@ -78,7 +77,6 @@ abstract class MappedDouble[T<:Mapper[T]](val fieldOwner: T) extends MappedField
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JsonAST.JDouble(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -119,12 +117,8 @@ abstract class MappedDouble[T<:Mapper[T]](val fieldOwner: T) extends MappedField
 		data
 	}
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JDouble(get))
-
 	override def setFromAny(in: Any): Double = {
 		in match {
-		  case JsonAST.JDouble(db) => this.set(db)
-		  case JsonAST.JInt(bi) => this.set(bi.doubleValue)
 			case n: Double => this.set(n)
 			case n: Number => this.set(n.doubleValue)
 			case (n: Number) :: _ => this.set(n.doubleValue)

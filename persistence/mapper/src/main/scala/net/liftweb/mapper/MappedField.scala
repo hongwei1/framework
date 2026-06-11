@@ -24,7 +24,6 @@ import scala.xml._
 import java.util.Date
 
 import net.liftweb.common._
-import net.liftweb.json._
 import net.liftweb.util._
 
 import scala.annotation.tailrec
@@ -70,11 +69,6 @@ trait BaseMappedField extends SelectableField with Bindable with MixableMappedFi
   def dbDisplay_? = true
 
   def dbIncludeInForm_? : Boolean = dbDisplay_?
-
-  def asJsonField: Box[JsonAST.JField] = 
-    asJsonValue.map(v => JsonAST.JField(name, v))
-
-  def asJsonValue: Box[JsonAST.JValue]
 
   /**
    *  Get a JDBC friendly representation of the named field (this is used for MappedFields that correspond to more than

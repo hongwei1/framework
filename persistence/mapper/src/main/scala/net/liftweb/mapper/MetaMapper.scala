@@ -30,7 +30,7 @@ import scala.xml._
 import common._
 import json._
 import util.Helpers._
-import util.{SourceFieldMetadata, NamedPF, FieldError, Helpers,CssSel,PassThru}
+import util.{SourceFieldMetadata, NamedPF, FieldError, Helpers}
 // OBP fork: webkit removed. `Factory` now resolves to the same-package
 // net.liftweb.mapper.Factory (MapperFactory.scala); LiftRules / S / SHtml /
 // RequestMemoize / http.js usages were deleted along with the web/JS/form code.
@@ -630,71 +630,8 @@ trait MetaMapper[A<:Mapper[A]] extends BaseMetaMapper with Mapper[A] {
     case _ => toSave.persisted_?
   }
 
-  /**
-   * This method will update the instance from JSON.  It allows for
-   * attacks from untrusted JSON as it bypasses normal security.  By
-   * default, the method is protected.  You can write a proxy method
-   * to expose the functionality.
-   */
-  protected def updateFromJSON_!(toUpdate: A, json: JsonAST.JObject): A = {
-    import JsonAST._
 
-    toUpdate.runSafe {
 
-      for {
-        field <- json.obj
-        meth <- _mappedFields.get(field.name)
-      } {
-        val f = ??(meth, toUpdate)
-        f.setFromAny(field.value)
-      }
-    }
-
-    toUpdate
-  }
-
-  /**
-   * This method will encode the instance as JSON.  It may reveal
-   * data in fields that might otherwise be proprietary.  It should
-   * be used with caution and only exposed as a public method
-   * after a security review.
-   */
-  protected def encodeAsJSON_! (toEncode: A): JsonAST.JObject = {
-    toEncode.runSafe {
-      JsonAST.JObject(JsonAST.JField("$persisted",
-				     JsonAST.JBool(toEncode.persisted_?)) ::
-		      this.mappedFieldList.
-		      flatMap(fh => ??(fh.method, toEncode).asJsonField))
-    }
-  }
-
-  /**
-   * Decode the fields from a JSON Object.  Should the fields be marked as dirty?
-   */
-  protected def decodeFromJSON_!(json: JsonAST.JObject, markFieldsAsDirty: Boolean): A = {
-    val ret: A = createInstance
-    import JsonAST._
-
-    ret.runSafe {
-      json.findField {
-        case JField("$persisted", JBool(per)) =>
-          ret.persisted_? = per
-          true
-        case _ => false
-      }
-
-      for {
-        field <- json.obj
-        meth <- _mappedFields.get(field.name)
-      } {
-        val f = ??(meth, ret)
-        f.setFromAny(field.value)
-        if (!markFieldsAsDirty) f.resetDirty
-      }
-    }
-
-    ret
-  }
 
 
   def whatToSet(toSave : A) : String = {
@@ -1057,32 +994,6 @@ trait MetaMapper[A<:Mapper[A]] extends BaseMetaMapper with Mapper[A] {
       null
     } else {
       (accessor.get.invoke(this).asInstanceOf[MappedField[AnyRef, A]]).buildSetActualValue(accessor.get, inst, name)
-    }
-  }
-
-  /**
-   * A set of CssSels that can be used to bind this MetaMapper's fields.
-   *
-   * Elements with a class matching the field name are mapped to the NodeSeq
-   * produced by the fieldHtml function that is passed in.
-   *
-   * So, with a MetaMapper that has three fields, name, date, and description,
-   * the resulting CSS selector transforms are:
-   *
-   * {{{
-   * Seq(
-   *   ".name" #> fieldHtml(-name field-),
-   *   ".date" #> fieldHtml(-date field-),
-   *   ".description" #> fieldHtml(-description field-)
-   * )
-   * }}}
-   *
-   * Above, -name field-, -date field-, and -description field- refer to the
-   * actual MappedField objects for those fields.
-   */
-  def fieldMapperTransforms(fieldHtml: (BaseOwnedMappedField[A]=>NodeSeq), mappedObject: A): Seq[CssSel] = {
-    mappedFieldList.map { field =>
-      s".${field.name}" #> fieldHtml(??(field.method, mappedObject))
     }
   }
 

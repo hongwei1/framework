@@ -25,7 +25,6 @@ import concurrent.locks._
 import common._
 import util._
 import Helpers._
-import Schedule._
 import java.lang.Thread._
 
 

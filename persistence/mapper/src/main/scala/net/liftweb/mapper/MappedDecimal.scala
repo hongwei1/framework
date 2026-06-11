@@ -24,7 +24,6 @@ import net.liftweb.util.Helpers._
 import java.util.Date
 import net.liftweb.util._
 import net.liftweb.common._
-import net.liftweb.json._
 // OBP fork: webkit removed — S/SHtml/asJsExp form+JS members had no OBP call-sites.
 import scala.xml.{Text, NodeSeq}
 
@@ -123,7 +122,6 @@ abstract class MappedDecimal[T <: Mapper[T]] (val fieldOwner : T, val context : 
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JDouble(v.toDouble))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -154,13 +152,9 @@ abstract class MappedDecimal[T <: Mapper[T]] (val fieldOwner : T, val context : 
     data
   }
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JDouble(get.doubleValue))
-
   def setFromAny (in : Any) : BigDecimal =
     in match {
       // FIXME set for big decimal
-      // case JsonAST.JDouble(db) => MappedDecimal.this.setAll(java.math.BigDecimal.valueOf(db))
-      // case JsonAST.JInt(bi) => MappedDecimal.this.set(new java.math.BigDecimal(bi.bigInteger))
       case bd : BigDecimal => setAll(bd)
       case n :: _ => setFromString(n.toString)
       case Some(n) => setFromString(n.toString)

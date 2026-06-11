@@ -24,7 +24,6 @@ import java.lang.reflect.Method
 import util._
 import common._
 import Helpers._
-import json._
 // OBP fork: webkit removed — time parse/format now go through MapperDateConverter
 // (was LiftRules.dateTimeConverter()); S/js form+JS members had no OBP call-sites.
 
@@ -53,7 +52,6 @@ abstract class MappedTime[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
    * By default uses MapperDateConverter.formatTime; override for field-specific behavior
    */
   def format(d: Date): String = MapperDateConverter.formatTime(d)
-
 
   import scala.reflect.runtime.universe._
   def manifest: TypeTag[Date] = typeTag[Date]
@@ -88,7 +86,6 @@ abstract class MappedTime[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JInt(v.getTime))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -114,11 +111,6 @@ abstract class MappedTime[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
     case d: Date => d.getTime / 1000L
   }
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case x => JsonAST.JInt(x.getTime)
-  })
-
   /**
    * Get the JDBC SQL Type for this field
    */
@@ -139,8 +131,6 @@ abstract class MappedTime[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
   }
 
   override def setFromAny(f : Any): Date = f match {
-    case JsonAST.JNull => this.set(null)
-    case JsonAST.JInt(v) => this.set(new Date(v.longValue))
     case "" | null => this.set(null)
     case s: String => parse(s).map(s => this.set(s)).openOr(this.get)
     case x :: _ => setFromAny(x)

@@ -24,7 +24,6 @@ import java.lang.reflect.Method
 import scala.xml.{Node, Text, NodeSeq}
 import java.util.Date
 import net.liftweb.util._
-import net.liftweb.json._
 import net.liftweb.common._
 // OBP fork: webkit removed — S.? validation messages inlined as literals;
 // the S/SHtml _toForm password widget and asJsExp had no OBP call-sites.
@@ -52,8 +51,6 @@ extends MappedField[String, T] {
   dbColumnNames(name).
   map(cn => fieldOwner.getSingleton._dbTableNameLC + "." + cn).
   mkString(", ")
-
-   def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JNull)
 
   def salt = this.salt_i
 
@@ -90,7 +87,6 @@ extends MappedField[String, T] {
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Empty
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -100,7 +96,6 @@ extends MappedField[String, T] {
        */
       def asSeq(v: T): Box[Seq[SourceFieldInfo]] = Empty
     })
-
 
   private var password = FatLazy(defaultValue)
   private val salt_i = FatLazy(util.Safe.randomString(16))
@@ -127,7 +122,6 @@ extends MappedField[String, T] {
     case x1 :: x2 :: Nil if x1 == x2 => this.set(x1) ; true
     case _ => invalidPw = true; invalidMsg = "passwords.do.not.match"; false
   }
-
 
   override def setFromAny(f: Any): String = {
     f match {

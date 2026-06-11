@@ -227,31 +227,6 @@ trait Mapper[A<:Mapper[A]] extends BaseMapper with Serializable with SourceInfo 
 
   type FieldPF = PartialFunction[String, NodeSeq => NodeSeq]
 
-  /**
-   * Given a function that takes a mapper field and returns a NodeSeq
-   * for the field, return, for this mapper instance, a set of CSS
-   * selector transforms that will transform a form for those fields
-   * into a fully-bound form that will interact with this instance.
-   */
-  def fieldMapperTransforms(fieldTransform: (BaseOwnedMappedField[A] => NodeSeq)): scala.collection.Seq[CssSel] = {
-    getSingleton.fieldMapperTransforms(fieldTransform, this)
-  }
-  
-  private var fieldTransforms_i: scala.collection.Seq[CssSel] = Vector()
-
-  /**
-   * A list of CSS selector transforms that will help render the fields
-   * of this mapper object.
-   */
-  def fieldTransforms = fieldTransforms_i
-
-  def appendFieldTransform(transform: CssSel): Unit = {
-    fieldTransforms_i = fieldTransforms_i :+ transform
-  }
-
-  def prependFieldTransform(transform: CssSel): Unit = {
-    fieldTransforms_i = transform +: fieldTransforms_i
-  }
 
   /**
    * If there's a field in this record that defines the locale, return it

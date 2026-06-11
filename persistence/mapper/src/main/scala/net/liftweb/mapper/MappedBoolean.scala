@@ -23,11 +23,9 @@ import net.liftweb.util.Helpers._
 import java.util.Date
 import net.liftweb.util._
 import net.liftweb.common._
-import net.liftweb.json._
 // OBP fork: webkit removed — SHtml.checkbox _toForm and asJsExp had no OBP call-sites.
 import scala.xml._
 import scala.reflect.runtime.universe._
-import json.JsonAST.JValue
 
 abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Boolean, T] {
   private var data : Box[Boolean] = Full(defaultValue)
@@ -41,7 +39,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
    * Get the JDBC SQL Type for this field
    */
   def targetSQLType = Types.BOOLEAN
-
 
   def manifest: TypeTag[Boolean] = typeTag[Boolean]
 
@@ -75,7 +72,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JBool(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -85,7 +81,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
        */
       def asSeq(v: T): Box[Seq[SourceFieldInfo]] = Empty
     })
-
 
   protected def i_is_! : Boolean = data openOr false
   protected def i_was_! : Boolean = orgData openOr false
@@ -102,8 +97,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
   override def readPermission_? = true
   override def writePermission_? = true
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(JsonAST.JBool(get))
-
   def real_convertToJDBCFriendly(value: Boolean): Object = new java.lang.Integer(if (value) 1 else 0)
 
   def jdbcFriendly(field : String) = data.map(v => new java.lang.Integer(if(v) 1 else 0)) openOr null
@@ -111,7 +104,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
   override def setFromAny(in: Any): Boolean = {
     in match {
       case b: Boolean => this.set(b)
-      case JsonAST.JBool(v) => this.set(v)
       case (b: Boolean) :: _ => this.set(b)
       case Some(b: Boolean) => this.set(b)
       case Full(b: Boolean) => this.set(b)
@@ -149,7 +141,6 @@ abstract class MappedBoolean[T<:Mapper[T]](val fieldOwner: T) extends MappedFiel
 
   def buildSetBooleanValue(accessor: Method, columnName : String) : (T, Boolean, Boolean) => Unit   =
     (inst, v, isNull) => doField(inst, accessor, {case tv: MappedBoolean[T] => tv.allSet(if (isNull) Empty else Full(v))})
-
 
   /**
    * Given the driver type, return the string required to create the column in the database

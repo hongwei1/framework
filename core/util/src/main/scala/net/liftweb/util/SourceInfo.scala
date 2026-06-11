@@ -2,8 +2,6 @@ package net.liftweb.util
 
 import net.liftweb.common.Box
 import scala.xml.NodeSeq
-import util.parsing.json.JSONArray
-import net.liftweb.json.JsonAST.JValue
 import scala.reflect.runtime.universe._
 
 /**
@@ -114,13 +112,6 @@ trait FieldConverter {
    * @return a NodeSeq if the field can be represented as one
    */
   def asNodeSeq(v: T): Box[NodeSeq]
-
-  /**
-   * Convert the field into a JSON value
-   * @param v the field value
-   * @return the JSON representation of the field
-   */
-  def asJson(v: T): Box[JValue]
 
   /**
    * If the field can represent a sequence of SourceFields,

@@ -27,7 +27,6 @@ import common._
 import Helpers._
 // OBP fork: webkit removed — date parse/format now go through MapperDateConverter
 // (was LiftRules.dateTimeConverter()); S/js form+JS members had no OBP call-sites.
-import json._
 import scala.xml.{Text, NodeSeq}
 import scala.reflect.runtime.universe._
 /**
@@ -41,7 +40,6 @@ import scala.reflect.runtime.universe._
 abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Date, T] {
   private val data = FatLazy(defaultValue)
   private val orgData = FatLazy(defaultValue)
-
 
   def manifest: TypeTag[Date] = typeTag[Date]
 
@@ -75,7 +73,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JInt(v.getTime))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -85,7 +82,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
        */
       def asSeq(v: T): Box[Seq[SourceFieldInfo]] = Empty
     })
-
 
   /**
    * This defines the string parsing semantics of this field. Used in setFromAny.
@@ -114,11 +110,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
     case d: Date => d.getTime / 1000L
   }
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case v => JsonAST.JInt(v.getTime)
-  })
-
   /**
    * Get the JDBC SQL Type for this field
    */
@@ -139,8 +130,6 @@ abstract class MappedDate[T<:Mapper[T]](val fieldOwner: T) extends MappedField[D
   }
 
   override def setFromAny(f : Any): Date = f match {
-    case JsonAST.JNull => this.set(null)
-    case JsonAST.JInt(v) => this.set(new Date(v.longValue))
     case n: Number => this.set(new Date(n.longValue))
     case "" | null => this.set(null)
     case s: String => parse(s).map(d => this.set(d)).openOr(this.get)

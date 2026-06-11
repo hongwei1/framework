@@ -55,8 +55,9 @@ lazy val framework =
 
 // Core Projects
 // -------------
+// OBP fork: actor, markdown, json removed — Mailer/Schedule/MarkdownParser/JsonCmd deleted.
 lazy val core: Seq[ProjectReference] =
-  Seq(common, actor, markdown, json, util)
+  Seq(common, util)
 
 lazy val common =
   coreProject("common")
@@ -66,45 +67,17 @@ lazy val common =
     )
     .settings(crossScalaVersions := crossUpTo213)
 
-lazy val actor =
-  coreProject("actor")
-    .dependsOn(common)
-    .settings(
-      description := "Simple Actor",
-      parallelExecution in Test := false
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val markdown =
-  coreProject("markdown")
-    .settings(
-      description := "Markdown Parser",
-      parallelExecution in Test := false,
-      libraryDependencies ++= Seq(scalatest, scalatest_junit, scala_xml, scala_parser)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val json =
-  coreProject("json")
-    .settings(
-      description := "JSON Library",
-      parallelExecution in Test := false,
-      libraryDependencies ++= Seq(scalap(scalaVersion.value), paranamer,  scala_xml)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
 lazy val util =
   coreProject("util")
-    .dependsOn(actor, json, markdown)
+    .dependsOn(common)
     .settings(
       description := "Utilities Library",
       parallelExecution in Test := false,
       libraryDependencies ++= Seq(
-        scala_compiler(scalaVersion.value),
+        scala_reflect(scalaVersion.value),
         joda_time,
         joda_convert,
         commons_codec,
-        javamail,
         log4j,
         htmlparser,
         xerces,

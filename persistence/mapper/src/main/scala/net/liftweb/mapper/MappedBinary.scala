@@ -24,11 +24,8 @@ import net.liftweb.util._
 import Helpers._
 import net.liftweb.common._
 // OBP fork: webkit removed — asJsExp (net.liftweb.http.js.JsExp) had no OBP call-sites.
-import net.liftweb.json._
 import scala.reflect.runtime.universe._
 import scala.xml.{Text, NodeSeq}
-import json.JsonAST.JValue
-
 
 abstract class MappedBinary[T<:Mapper[T]](val fieldOwner: T) extends MappedField[Array[Byte], T] {
   private val data : FatLazy[Array[Byte]] =  FatLazy(defaultValue)
@@ -72,7 +69,6 @@ abstract class MappedBinary[T<:Mapper[T]](val fieldOwner: T) extends MappedField
      * @param v the field value
      * @return the JSON representation of the field
      */
-    def asJson(v: T): Box[JValue] = Empty
 
     /**
      * If the field can represent a sequence of SourceFields,
@@ -107,14 +103,7 @@ abstract class MappedBinary[T<:Mapper[T]](val fieldOwner: T) extends MappedField
 
   override def renderJs_? = false
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case value => JsonAST.JString(base64Encode(value))
-  })
-
   override def setFromAny(f: Any): Array[Byte] = f match {
-    case null | JsonAST.JNull => this.set(null)
-    case JsonAST.JString(base64) => this.set(base64Decode(base64))
     case array: Array[Byte] => this.set(array)
     case s => this.set(s.toString.getBytes("UTF-8"))
   }
@@ -155,7 +144,6 @@ abstract class MappedText[T<:Mapper[T]](val fieldOwner: T) extends MappedField[S
     value
   }
 
-
   def manifest: TypeTag[String] = typeTag[String]
 
   /**
@@ -188,7 +176,6 @@ abstract class MappedText[T<:Mapper[T]](val fieldOwner: T) extends MappedField[S
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JString(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -217,17 +204,10 @@ abstract class MappedText[T<:Mapper[T]](val fieldOwner: T) extends MappedField[S
 
   protected[mapper] def doneWithSave(): Unit = {orgData.setFrom(data)}
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case str => JsonAST.JString(str)
-  })
-
   protected def i_obscure_!(in: String): String = ""
 
   override def setFromAny(in: Any): String = {
     in match {
-      case JsonAST.JNull => this.set(null)
-      case JsonAST.JString(str) => this.set(str)
       case seq: Seq[_] if seq.nonEmpty => seq.map(setFromAny).head
       case (s: String) :: _ => this.set(s)
       case s :: _ => this.setFromAny(s)
@@ -319,7 +299,6 @@ abstract class MappedFakeClob[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JString(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -329,7 +308,6 @@ abstract class MappedFakeClob[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
        */
       def asSeq(v: T): Box[Seq[SourceFieldInfo]] = Empty
     })
-
 
   /**
   * Get the JDBC SQL Type for this field
@@ -349,15 +327,8 @@ abstract class MappedFakeClob[T<:Mapper[T]](val fieldOwner: T) extends MappedFie
 
   protected def i_obscure_!(in: String): String = ""
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case str => JsonAST.JString(str)
-  })
-
   override def setFromAny(in: Any): String = {
     in match {
-      case JsonAST.JNull => this.set(null)
-      case JsonAST.JString(str) => this.set(str)
       case seq: Seq[_] if seq.nonEmpty => seq.map(setFromAny).head
       case (s: String) :: _ => this.set(s)
       case s :: _ => this.setFromAny(s)

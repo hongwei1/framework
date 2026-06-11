@@ -23,7 +23,6 @@ import java.util.Date
 
 import util._
 import common.{Box, Full, Empty, Failure}
-import json._
 // OBP fork: webkit removed — S.? validation messages inlined as literals;
 // S/js form+JS members (_toForm / toForm Elem override / asJsExp) had no OBP call-sites.
 
@@ -92,7 +91,6 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
        * @param v the field value
        * @return the JSON representation of the field
        */
-      def asJson(v: T): Box[JValue] = Full(JsonAST.JString(v))
 
       /**
        * If the field can represent a sequence of SourceFields,
@@ -128,11 +126,6 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
   protected def i_is_! : String = data.get
   protected def i_was_! : String = orgData.get
 
-  def asJsonValue: Box[JsonAST.JValue] = Full(get match {
-    case null => JsonAST.JNull
-    case str => JsonAST.JString(str)
-  })
-
   /**
    * Called after the field is saved to the database
    */
@@ -146,11 +139,9 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
 
   override def setFromAny(in: Any): String = {
     in match {
-      case JsonAST.JNull => this.set(null) 
       case seq: Seq[_] if seq.nonEmpty => seq.map(setFromAny).head
       case (s: String) :: _ => this.set(s)
       case s :: _ => this.setFromAny(s)
-      case JsonAST.JString(v) => this.set(v)
       case null => this.set(null)
       case s: String => this.set(s)
       case Some(s: String) => this.set(s)
@@ -186,8 +177,6 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
   def buildSetBooleanValue(accessor: Method, columnName: String): (T, Boolean, Boolean) => Unit =
   (inst, v, isNull) => doField(inst, accessor, {case f: MappedString[T] => f.wholeSet(if (isNull) null else v.toString)})
 
-
-
   /**
    * Make sure that the field is unique in the database
    */
@@ -197,7 +186,6 @@ abstract class MappedString[T<:Mapper[T]](val fieldOwner: T,val maxLen: Int) ext
     case Nil => Nil
     case x :: _ => List(FieldError(this, Text(msg))) // issue 179
   }
-
 
   /**
    * Given the driver type, return the string required to create the column in the database
