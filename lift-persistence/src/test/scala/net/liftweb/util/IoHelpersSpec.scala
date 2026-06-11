@@ -37,7 +37,7 @@ class IoHelpersSpec extends Specification with IoHelpers {
           bytes <- tryo(readWholeStream(getClass.getResourceAsStream("IoHelpersSpec.txt"))).filter(_ ne null)
           text <- tryo(new String(bytes))
           path = {
-            val tempFile = Files.createTempFile(s"IoHelpersSpec_${nextFuncName}", ".tmp") 
+            val tempFile = Files.createTempFile(s"IoHelpersSpec_${randomString(10)}", ".tmp")
             Files.write(tempFile, text.getBytes(StandardCharsets.UTF_8))
             tempFile
           }

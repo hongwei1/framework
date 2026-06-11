@@ -21,6 +21,14 @@ import common._
 import scala.xml.NodeSeq
 
 /**
+ * This trait is used to identify an object that is representable as a
+ * {@link NodeSeq}.
+ */
+trait Bindable {
+  def asHtml: NodeSeq
+}
+
+/**
  * Defines the association of this reference with a markup tag ID
  */
 trait FieldIdentifier {

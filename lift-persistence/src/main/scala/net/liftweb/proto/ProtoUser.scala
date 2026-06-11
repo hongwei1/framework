@@ -135,12 +135,6 @@ trait ProtoUser {
       case (_, l) if l.length > 1 => l
       case _ => getEmail
     }
-
-    /**
-     * Get an email link
-     */
-    def niceNameWEmailLink = <a href={"mailto:"+urlEncode(getEmail)}>{niceName}</a>
-
   }
 
   /**
@@ -157,11 +151,6 @@ trait ProtoUser {
    * Get a nice name for the user
    */
   def shortName(inst: TheUserType): String = inst.shortName
-
-  /**
-   * Get an email link for the user
-   */
-  def niceNameWEmailLink(inst: TheUserType): Elem = inst.niceNameWEmailLink
 
   /**
    * A generic representation of a field.  For example, this represents the
@@ -299,9 +288,7 @@ trait ProtoUser {
    * If you want to redirect a user to a different page after login,
    * put the page here
    */
-  object loginRedirect extends SessionVar[Box[String]](Empty) {
-    override lazy val __nameSalt = Helpers.nextFuncName
-  }
+  object loginRedirect extends SessionVar[Box[String]](Empty)
 
   /**
    * Calculate the path given a suffix by prepending the basePath to the suffix
@@ -380,16 +367,12 @@ trait ProtoUser {
     }
 
 
-  private object curUserId extends SessionVar[Box[String]](Empty) {
-    override lazy val __nameSalt = Helpers.nextFuncName
-  }
+  private object curUserId extends SessionVar[Box[String]](Empty)
 
 
   def currentUserId: Box[String] = curUserId.get
 
-  private object curUser extends RequestVar[Box[TheUserType]](currentUserId.flatMap(userFromStringId))  with CleanRequestVarOnSessionTransition  {
-    override lazy val __nameSalt = Helpers.nextFuncName
-  }
+  private object curUser extends RequestVar[Box[TheUserType]](currentUserId.flatMap(userFromStringId))  with CleanRequestVarOnSessionTransition
 
 
   /**

@@ -55,6 +55,8 @@ trait DB extends Loggable {
   private val threadStore = new ThreadLocal[HashMap[ConnectionIdentifier, ConnectionHolder]]
   private val _postCommitFuncs = new ThreadLocal[List[() => Unit]]
 
+  private val connectionIdCounter = new java.util.concurrent.atomic.AtomicLong(0)
+
   var globalDefaultSchemaName: Box[String] = Empty
 
   var queryTimeout: Box[Int] = Empty
@@ -173,7 +175,7 @@ trait DB extends Loggable {
       cm.newSuperConnection(name) or cm.newConnection(name).map(c => new SuperConnection(c, () => cm.releaseConnection(c)))
 
     def jndiSuperConnection: Box[SuperConnection] = jndiConnection(name).map(c => {
-      val uniqueId = if (logger.isDebugEnabled) Helpers.nextNum.toString else ""
+      val uniqueId = if (logger.isDebugEnabled) connectionIdCounter.incrementAndGet().toString else ""
       logger.debug("Connection ID " + uniqueId + " for JNDI connection " + name.jndiName + " opened")
       new SuperConnection(c, () => {logger.debug("Connection ID " + uniqueId + " for JNDI connection " + name.jndiName + " closed"); c.close})
     })

@@ -62,13 +62,7 @@ object Logger {
    * 
    * Useful for initializing the logging backend with a non-default configuration.
    * 
-   * Helpers exists for [[Log4j log4j]] and [[Logback logback]]:
-   * 
-   * {{{
-   * Logger.setup = Full(Log4j.withFile(url)
-   * }}}
-   * 
-   * or
+   * A helper exists for [[Logback logback]]:
    *
    * {{{
    * Logger.setup = Full(Logback.withFile(url))
@@ -303,58 +297,6 @@ trait Loggable {
  */
 trait LazyLoggable {
   @transient protected lazy val logger = Logger(this.getClass)
-}
-
-/**
- * Configuration helpers for the log4j logging backend.
- */
-object Log4j {
-  import org.apache.log4j.{LogManager,PropertyConfigurator}
-  import org.apache.log4j.xml.DOMConfigurator
-  
-  /**
-   * Default configuration for log4j backend. Appends to the console with a
-   * simple layout at `INFO` level.
-   */
-  val defaultProps =
-    """<?xml version="1.0" encoding="UTF-8" ?>
-    <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-    <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-    <appender name="appender" class="org.apache.log4j.ConsoleAppender">
-    <layout class="org.apache.log4j.SimpleLayout"/>
-    </appender>
-    <root>
-    <priority value ="INFO"/>
-    <appender-ref ref="appender"/>
-    </root>
-    </log4j:configuration>
-    """
-  
-  /**
-   * Configure with the contents of the file at the specified `url` (either
-   * `.xml` or `.properties`).
-   */
-  def withFile(url: java.net.URL)() = {
-    if (url.getPath.endsWith(".xml")) {
-      val domConf = new DOMConfigurator
-      domConf.doConfigure(url, LogManager.getLoggerRepository())
-    } else 
-      PropertyConfigurator.configure(url)
-  }
-  /**
-   * Configure with the specified configuration. `config` must contain a valid
-   * XML document.
-   */
-  def withConfig(config: String)() = {
-    val domConf = new DOMConfigurator
-    val is = new java.io.ByteArrayInputStream(config.getBytes("UTF-8"))
-    domConf.doConfigure(is, LogManager.getLoggerRepository())
-  }
-  
-  /**
-   * Configure with simple defaults. See [[defaultProps]].
-   */
-  def withDefault() = withConfig(defaultProps)
 }
 
 /**
