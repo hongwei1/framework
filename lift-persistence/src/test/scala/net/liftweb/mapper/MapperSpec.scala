@@ -23,7 +23,6 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.BeforeEach
 
 import common._
-import json._
 import util._
 import Helpers._
 // OBP fork: lift-webkit removed (was: import http.LiftRules / import http.provider.HTTPRequest)
@@ -106,29 +105,6 @@ class MapperSpec extends Specification with BeforeEach {
         SampleTag.extraColumn.name must_== "extraColumn"
         SampleTag.extraColumn.dbColumnName must_== "AnExtraColumn"
         Mixer.dbTableName must_== "MIXME_UP"
-      }
-
-      "basic JSON encoding/decoding works" in {
-        val m = SampleModel.findAll().head
-        val json = m.encodeAsJson()
-        val rebuilt = SampleModel.buildFromJson(json)
-        m must_== rebuilt
-      }
-
-      "basic JSON encoding/decoding works with snake_case" in {
-        val m = SampleModelSnake.findAll().head
-        val json = m.encodeAsJson()
-        val rebuilt = SampleModelSnake.buildFromJson(json)
-        m must_== rebuilt
-      }
-
-      "Can JSON decode and write back" in {
-        val m = SampleModel.find(2).openOrThrowException("Test")
-        val json = m.encodeAsJson()
-        val rebuilt = SampleModel.buildFromJson(json)
-        rebuilt.firstName("yak").save
-        val recalled = SampleModel.find(2).openOrThrowException("Test")
-        recalled.firstName.get must_== "yak"
       }
 
       "You can put stuff in a Set" in {

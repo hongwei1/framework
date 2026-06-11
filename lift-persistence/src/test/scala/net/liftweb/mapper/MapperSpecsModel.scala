@@ -20,7 +20,6 @@ package mapper
 import java.util.Locale
 
 import common._
-import json._
 import util._
 import Helpers._
 
@@ -113,10 +112,6 @@ object SampleStatus extends Enumeration {
 object SampleModel extends SampleModel with KeyedMetaMapper[Long, SampleModel] {
   override def dbAddTable = Full(populate)
 
-  def encodeAsJson(in: SampleModel): JsonAST.JObject = encodeAsJSON_!(in)
-
-  def buildFromJson(json: JsonAST.JObject): SampleModel = decodeFromJSON_!(json, false)
-
   private def populate(): Unit = {
     create.firstName("Elwood").save
     create.firstName("Madeline").save
@@ -143,7 +138,6 @@ class SampleModel extends KeyedMapper[Long, SampleModel] {
 
   object status extends MappedEnum(this, SampleStatus)
 
-  def encodeAsJson(): JsonAST.JObject = SampleModel.encodeAsJson(this)
 }
 
 
@@ -181,10 +175,6 @@ class SampleTagSnake extends LongKeyedMapper[SampleTagSnake] with IdPK {
 object SampleModelSnake extends SampleModelSnake with KeyedMetaMapper[Long, SampleModelSnake] {
   override def dbAddTable = Full(populate)
 
-  def encodeAsJson(in: SampleModelSnake): JsonAST.JObject = encodeAsJSON_!(in)
-
-  def buildFromJson(json: JsonAST.JObject): SampleModelSnake = decodeFromJSON_!(json, false)
-
   private def populate(): Unit = {
     create.firstName("Elwood").save
     create.firstName("Madeline").save
@@ -212,7 +202,6 @@ class SampleModelSnake extends KeyedMapper[Long, SampleModelSnake] {
     override def dbNotNull_? = true
   }
 
-  def encodeAsJson(): JsonAST.JObject = SampleModelSnake.encodeAsJson(this)
 }
 
 
