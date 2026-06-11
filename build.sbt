@@ -1,116 +1,65 @@
 import Dependencies._
-import LiftSbtHelpers._
 
 organization in ThisBuild          := "net.liftweb"
-version in ThisBuild               := "3.5.0-obp-nowebkit"
+version in ThisBuild               := "3.5.0-lift-persistence"
 homepage in ThisBuild              := Some(url("http://www.liftweb.net"))
 licenses in ThisBuild              += ("Apache License, Version 2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
 startYear in ThisBuild             := Some(2006)
 organizationName in ThisBuild      := "WorldWide Conferencing, LLC"
 
-val scala211Version = "2.11.12"
 val scala212Version = "2.12.12"
 val scala213Version = "2.13.2"
 
-val crossUpTo212 = Seq(scala212Version, scala211Version)
-val crossUpTo213 = scala213Version +: crossUpTo212
-
 scalaVersion in ThisBuild          := scala212Version
-crossScalaVersions in ThisBuild    := crossUpTo212 // default everyone to 2.12 for now
+crossScalaVersions in ThisBuild    := Seq(scala212Version, scala213Version)
 
 libraryDependencies in ThisBuild ++= Seq(specs2, specs2Matchers, specs2Mock, scalacheck, scalactic, scalatest)
 
 scalacOptions in ThisBuild ++= Seq("-deprecation")
 
-// Settings for Sonatype compliance
 pomIncludeRepository in ThisBuild := { _ => false }
 publishTo in ThisBuild := {
-  if (isSnapshot.value) {
-    Some(Opts.resolver.sonatypeSnapshots)
-  } else {
-    Some(Opts.resolver.sonatypeStaging)
-  }
+  if (isSnapshot.value) Some(Opts.resolver.sonatypeSnapshots)
+  else Some(Opts.resolver.sonatypeStaging)
 }
-scmInfo in ThisBuild   := Some(ScmInfo(url("https://github.com/lift/framework"), "scm:git:https://github.com/lift/framework.git"))
-pomExtra in ThisBuild  := Developers.toXml
+scmInfo in ThisBuild := Some(ScmInfo(
+  url("https://github.com/lift/framework"),
+  "scm:git:https://github.com/lift/framework.git"
+))
 
-credentials in ThisBuild += Credentials(BuildPaths.getGlobalSettingsDirectory(state.value, BuildPaths.getGlobalBase(state.value)) / ".credentials")
-
-initialize := {
-  printLogo(name.value, version.value, scalaVersion.value)
-}
-
-resolvers  in ThisBuild  ++= Seq(
-  "snapshots"     at "https://oss.sonatype.org/content/repositories/snapshots",
-  "releases"      at "https://oss.sonatype.org/content/repositories/releases"
+credentials in ThisBuild += Credentials(
+  BuildPaths.getGlobalSettingsDirectory(state.value, BuildPaths.getGlobalBase(state.value)) / ".credentials"
 )
 
-// OBP fork: drop `web` (webkit/testkit) from the aggregate — webkit is the dependency we are removing.
-lazy val liftProjects = core ++ persistence
+resolvers in ThisBuild ++= Seq(
+  "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "releases"  at "https://oss.sonatype.org/content/repositories/releases"
+)
 
-lazy val framework =
-  liftProject("lift-framework", file("."))
-    .aggregate(liftProjects: _*)
-    .enablePlugins(ScalaUnidocPlugin)
-
-// Core Projects
-// -------------
-// OBP fork: actor, markdown, json removed — Mailer/Schedule/MarkdownParser/JsonCmd deleted.
-lazy val core: Seq[ProjectReference] =
-  Seq(common, util)
-
-lazy val common =
-  coreProject("common")
+lazy val `lift-persistence` =
+  Project("lift-persistence", file("lift-persistence"))
     .settings(
-      description := "Common Libraties and Utilities",
-      libraryDependencies ++= Seq(slf4j_api, logback, slf4j_log4j12, scala_xml, scala_parser)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val util =
-  coreProject("util")
-    .dependsOn(common)
-    .settings(
-      description := "Utilities Library",
+      description := "Lift Persistence — OBP fork single-artifact ORM (mapper + db + proto + util + common)",
       parallelExecution in Test := false,
       libraryDependencies ++= Seq(
         scala_reflect(scalaVersion.value),
+        slf4j_api,
+        logback,
+        slf4j_log4j12,
+        scala_xml,
+        scala_parser,
         joda_time,
         joda_convert,
         commons_codec,
         log4j,
         htmlparser,
         xerces,
-        jbcrypt
-      )
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-// Persistence Projects
-// --------------------
-lazy val persistence: Seq[ProjectReference] =
-  // OBP fork: build only the ORM trio OBP needs; record/squeryl/mongodb dropped.
-  Seq(db, proto, mapper)
-
-lazy val db =
-  persistenceProject("db")
-    .dependsOn(util) // OBP fork: webkit removed (was: util, webkit)
-    .settings(libraryDependencies += hikariCP)
-    .settings(libraryDependencies += mockito_scalatest)
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val proto =
-  persistenceProject("proto")
-    .dependsOn(util) // OBP fork: webkit removed (was: webkit)
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val mapper =
-  persistenceProject("mapper")
-    .dependsOn(db, proto)
-    .settings(
-      description := "Mapper Library",
-      parallelExecution in Test := false,
-      libraryDependencies ++= Seq(h2, derby, jbcrypt),
+        jbcrypt,
+        hikariCP,
+        // test
+        h2,
+        derby
+      ),
       initialize in Test := {
         System.setProperty(
           "derby.stream.error.file",
@@ -118,5 +67,3 @@ lazy val mapper =
         )
       }
     )
-    .settings(crossScalaVersions := crossUpTo213)
-

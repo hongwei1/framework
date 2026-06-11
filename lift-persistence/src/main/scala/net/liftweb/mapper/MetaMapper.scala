@@ -28,7 +28,6 @@ import scala.collection.immutable.{SortedMap, TreeMap}
 import scala.xml._
 
 import common._
-import json._
 import util.Helpers._
 import util.{SourceFieldMetadata, NamedPF, FieldError, Helpers}
 // OBP fork: webkit removed. `Factory` now resolves to the same-package
