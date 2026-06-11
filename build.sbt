@@ -56,7 +56,7 @@ lazy val framework =
 // Core Projects
 // -------------
 lazy val core: Seq[ProjectReference] =
-  Seq(common, actor, markdown, json, json_scalaz7, json_ext, util)
+  Seq(common, actor, markdown, json, util)
 
 lazy val common =
   coreProject("common")
@@ -93,30 +93,6 @@ lazy val json =
     )
     .settings(crossScalaVersions := crossUpTo213)
 
-lazy val documentationHelpers =
-  coreProject("documentation-helpers")
-    .settings(description := "Documentation Helpers")
-    .dependsOn(util)
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val json_scalaz7 =
-  coreProject("json-scalaz7")
-    .dependsOn(json)
-    .settings(
-      description := "JSON Library based on Scalaz 7",
-      libraryDependencies ++= Seq(scalaz7)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val json_ext =
-  coreProject("json-ext")
-    .dependsOn(common, json)
-    .settings(
-      description := "Extentions to JSON Library",
-      libraryDependencies ++= Seq(commons_codec, joda_time, joda_convert)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
 lazy val util =
   coreProject("util")
     .dependsOn(actor, json, markdown)
@@ -135,82 +111,6 @@ lazy val util =
         jbcrypt
       )
     )
-    .settings(crossScalaVersions := crossUpTo213)
-
-// Web Projects
-// ------------
-lazy val web: Seq[ProjectReference] =
-  Seq(testkit, webkit)
-
-lazy val testkit =
-  webProject("testkit")
-    .dependsOn(util)
-    .settings(
-      description := "Testkit for Webkit Library",
-      libraryDependencies ++= Seq(commons_httpclient, servlet_api)
-    )
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val webkit =
-  webProject("webkit")
-    .dependsOn(util, testkit % "provided")
-    .settings(
-      description := "Webkit Library",
-      parallelExecution in Test := false,
-      libraryDependencies ++= Seq(
-        commons_fileupload,
-        rhino,
-        servlet_api,
-        specs2Prov,
-        specs2MatchersProv,
-        jetty6,
-        jwebunit,
-        mockito_scalatest,
-        jquery,
-        jasmineCore,
-        jasmineAjax
-      ),
-      libraryDependencies ++= {
-        CrossVersion.partialVersion(scalaVersion.value) match {
-          case Some((2, scalaMajor)) if scalaMajor >= 13 => Seq(scala_parallel_collections)
-          case _ => Seq.empty
-        }
-      },
-      initialize in Test := {
-        System.setProperty(
-          "net.liftweb.webapptest.src.test.webapp",
-          ((sourceDirectory in Test).value / "webapp").absString
-        )
-      },
-      unmanagedSourceDirectories in Compile += {
-        (sourceDirectory in Compile).value / ("scala_" + scalaBinaryVersion.value)
-      },
-      unmanagedSourceDirectories in Test += {
-        (sourceDirectory in Test).value / ("scala_" + scalaBinaryVersion.value)
-      },
-      compile in Compile := (compile in Compile).dependsOn(WebKeys.assets).value,
-      /**
-        * This is to ensure that the tests in net.liftweb.webapptest run last
-        * so that other tests (MenuSpec in particular) run before the SiteMap
-        * is set.
-        */
-      testGrouping in Test := {
-        (definedTests in Test).map { tests =>
-          import Tests._
-
-          val (webapptests, others) = tests.partition { test =>
-            test.name.startsWith("net.liftweb.webapptest")
-          }
-
-          Seq(
-            new Group("others", others, InProcess),
-            new Group("webapptests", webapptests, InProcess)
-          )
-        }.value
-      },
-
-    )
-    .enablePlugins(SbtWeb)
     .settings(crossScalaVersions := crossUpTo213)
 
 // Persistence Projects
@@ -247,36 +147,3 @@ lazy val mapper =
     )
     .settings(crossScalaVersions := crossUpTo213)
 
-lazy val record =
-  persistenceProject("record")
-    .dependsOn(proto)
-    .settings(libraryDependencies ++= Seq(jbcrypt))
-    .settings(crossScalaVersions := crossUpTo213)
-
-lazy val squeryl_record =
-  persistenceProject("squeryl-record")
-    .dependsOn(record, db)
-    .settings(libraryDependencies ++= Seq(h2, squeryl))
-
-lazy val mongodb =
-  persistenceProject("mongodb")
-    .dependsOn(json_ext, util)
-    .settings(
-      crossScalaVersions := crossUpTo213,
-      parallelExecution in Test := false,
-      libraryDependencies ++= Seq(mongo_java_driver, mongo_java_driver_async),
-      initialize in Test := {
-        System.setProperty(
-          "java.util.logging.config.file",
-          ((resourceDirectory in Test).value / "logging.properties").absolutePath
-        )
-      }
-    )
-
-lazy val mongodb_record =
-  persistenceProject("mongodb-record")
-    .dependsOn(record, mongodb)
-    .settings(
-      crossScalaVersions := crossUpTo213,
-      parallelExecution in Test := false
-    )
