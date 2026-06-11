@@ -43,6 +43,8 @@ lazy val `lift-persistence` =
       parallelExecution in Test := false,
       libraryDependencies ++= Seq(
         scala_reflect(scalaVersion.value),
+        scalap(scalaVersion.value),
+        paranamer,
         slf4j_api,
         logback,
         slf4j_log4j12,

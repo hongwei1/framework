@@ -17,7 +17,7 @@
 package net.liftweb
 package json
 
-import util.control.Exception._
+import scala.util.control.Exception._
 
 import org.specs2.mutable.Specification
 
