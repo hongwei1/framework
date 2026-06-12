@@ -18,23 +18,10 @@ libraryDependencies in ThisBuild ++= Seq(specs2, specs2Matchers, specs2Mock, sca
 scalacOptions in ThisBuild ++= Seq("-deprecation")
 
 pomIncludeRepository in ThisBuild := { _ => false }
-publishTo in ThisBuild := {
-  if (isSnapshot.value) Some(Opts.resolver.sonatypeSnapshots)
-  else Some(Opts.resolver.sonatypeStaging)
-}
 scmInfo in ThisBuild := Some(ScmInfo(
-  url("https://github.com/lift/framework"),
-  "scm:git:https://github.com/lift/framework.git"
+  url("https://github.com/hongwei1/framework"),
+  "scm:git:https://github.com/hongwei1/framework.git"
 ))
-
-credentials in ThisBuild += Credentials(
-  BuildPaths.getGlobalSettingsDirectory(state.value, BuildPaths.getGlobalBase(state.value)) / ".credentials"
-)
-
-resolvers in ThisBuild ++= Seq(
-  "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "releases"  at "https://oss.sonatype.org/content/repositories/releases"
-)
 
 lazy val `lift-persistence` =
   Project("lift-persistence", file("lift-persistence"))
