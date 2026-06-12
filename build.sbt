@@ -43,8 +43,6 @@ lazy val `lift-persistence` =
       parallelExecution in Test := false,
       libraryDependencies ++= Seq(
         scala_reflect(scalaVersion.value),
-        scalap(scalaVersion.value),
-        paranamer,
         slf4j_api,
         logback,
         scala_xml,
@@ -53,7 +51,6 @@ lazy val `lift-persistence` =
         commons_codec,
         xerces,
         jbcrypt,
-        hikariCP,
         // test
         h2,
         derby
