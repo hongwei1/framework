@@ -23,32 +23,35 @@ ThisBuild / scmInfo := Some(ScmInfo(
   "scm:git:https://github.com/hongwei1/framework.git"
 ))
 
-// Single-module library. The project lives at the repository root; `name`
-// fixes the published artifactId to lift-persistence_<scalaVersion>, which
-// downstream consumers depend on via JitPack.
-lazy val root = (project in file("."))
-  .settings(
-    name        := "lift-persistence",
-    description := "Lift Persistence — OBP fork single-artifact ORM (mapper + db + proto + util + common)",
-    Test / parallelExecution := false,
-    libraryDependencies ++= Seq(
-      scala_reflect(scalaVersion.value),
-      slf4j_api,
-      logback,
-      scala_xml,
-      joda_time,
-      joda_convert,
-      commons_codec,
-      xerces,
-      jbcrypt,
-      // test
-      h2,
-      derby
-    ),
-    Test / initialize := {
-      System.setProperty(
-        "derby.stream.error.file",
-        ((Test / crossTarget).value / "derby.log").absolutePath
-      )
-    }
-  )
+// The library lives in the lift-persistence/ subproject ON PURPOSE.
+// JitPack names sbt artifacts by module: a named subproject publishes as
+// com.github.<user>.<repo>:lift-persistence_<scalaVersion>, which is the
+// coordinate downstream consumers (OBP-API) depend on. A flattened root
+// project would instead publish as com.github.<user>:<repo> — losing the
+// scala-version suffix and breaking the artifactId. Do not flatten.
+lazy val `lift-persistence` =
+  Project("lift-persistence", file("lift-persistence"))
+    .settings(
+      description := "Lift Persistence — OBP fork single-artifact ORM (mapper + db + proto + util + common)",
+      Test / parallelExecution := false,
+      libraryDependencies ++= Seq(
+        scala_reflect(scalaVersion.value),
+        slf4j_api,
+        logback,
+        scala_xml,
+        joda_time,
+        joda_convert,
+        commons_codec,
+        xerces,
+        jbcrypt,
+        // test
+        h2,
+        derby
+      ),
+      Test / initialize := {
+        System.setProperty(
+          "derby.stream.error.file",
+          ((Test / crossTarget).value / "derby.log").absolutePath
+        )
+      }
+    )
