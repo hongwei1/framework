@@ -147,7 +147,7 @@ extends MappedField[String, T] {
     if (password.get.startsWith("b;")) {
       BCrypt.checkpw(toMatch, password.get.substring(2)+salt_i.get)
     } else
-    hash("{"+toMatch+"} salt={"+salt_i.get+"}") == password.get
+    secureEquals(hash("{"+toMatch+"} salt={"+salt_i.get+"}"), password.get)
   }
 
   override def validate : List[FieldError] = {

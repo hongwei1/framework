@@ -24,17 +24,23 @@ import proto._
 import scala.xml.Text
 
 object MappedEmail {
+  /** RFC 5321 caps the whole address at 254 chars. Rejecting longer input up
+   *  front also stops the validation regex from running on multi-KB strings,
+   *  whose repeated-group structure can recurse into a StackOverflowError. */
+  val MaxEmailLength = 254
+
   def emailPattern = ProtoRules.emailRegexPattern.vend
 
-  def validEmailAddr_?(email: String): Boolean = emailPattern.matcher(email).matches
+  def validEmailAddr_?(email: String): Boolean =
+    email != null && email.length <= MaxEmailLength && emailPattern.matcher(email).matches
 }
 
-abstract class MappedEmail[T<:Mapper[T]](owner: T, maxLen: Int) extends MappedString[T](owner, maxLen) {
+abstract class MappedEmail[T <: Mapper[T]](owner: T, maxLen: Int) extends MappedString[T](owner, maxLen) {
 
   override def setFilter = notNull _ :: toLower _ :: trim _ :: super.setFilter
 
   override def validate =
-    (if (MappedEmail.emailPattern.matcher(i_is_!).matches) Nil else List(FieldError(this, Text("invalid.email.address")))) :::
+    (if (MappedEmail.validEmailAddr_?(i_is_!)) Nil else List(FieldError(this, Text("invalid.email.address")))) :::
     super.validate
 
 }
