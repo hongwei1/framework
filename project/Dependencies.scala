@@ -21,7 +21,7 @@ object Dependencies {
 
   type ModuleMap = String => ModuleID
 
-  lazy val slf4jVersion = "1.7.25"
+  lazy val slf4jVersion = "1.7.36"
 
   // Compile scope:
   // Scope available in all classpath, transitive by default.
@@ -36,12 +36,12 @@ object Dependencies {
 
   // Provided scope:
   // Scope provided by container, available only in compile and test classpath, non-transitive by default.
-  lazy val logback         = "ch.qos.logback"    % "logback-classic"       % "1.2.3"        % Provided
+  lazy val logback         = "ch.qos.logback"    % "logback-classic"       % "1.2.13"       % Provided
 
   // Test scope:
   // Scope available only in test classpath, non-transitive by default.
-  lazy val derby      = "org.apache.derby"         % "derby"                    % "10.7.1.1" % Test
-  lazy val h2database = "com.h2database"           % "h2"                       % "1.2.147"  % Test
+  lazy val derby      = "org.apache.derby"         % "derby"                    % "10.16.1.1" % Test
+  lazy val h2database = "com.h2database"           % "h2"                       % "2.4.240"   % Test
 
   lazy val specs2      = "org.specs2"        %% "specs2-core"          % "4.9.4"         % Test
   lazy val scalacheck  = "org.specs2"        %% "specs2-scalacheck"    % specs2.revision % Test
