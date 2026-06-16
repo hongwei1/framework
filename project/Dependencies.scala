@@ -31,7 +31,7 @@ object Dependencies {
   lazy val joda_convert           = "org.joda"                   % "joda-convert"       % "2.1"
   lazy val scala_reflect: ModuleMap  = "org.scala-lang"          % "scala-reflect"      % _
   lazy val slf4j_api              = "org.slf4j"                  % "slf4j-api"          % slf4jVersion
-  lazy val scala_xml              = "org.scala-lang.modules"     %% "scala-xml"         % "1.3.0"
+  lazy val scala_xml              = "org.scala-lang.modules"     %% "scala-xml"         % "2.4.0"
   lazy val xerces                 = "xerces" % "xercesImpl" % "2.12.2"
 
   // Provided scope:
